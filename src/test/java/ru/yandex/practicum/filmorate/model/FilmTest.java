@@ -13,11 +13,11 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class FilmTest {
-    private final static Integer ID = 1;
-    private final static String NAME = "nisi eiusmod";
-    private final static String DESCRIPTION = "adipisicing";
-    private final static LocalDate RELEASE_DATA = LocalDate.of(1967, 3, 25);
-    private final static Integer DURATION = 100;
+    public final static Integer ID = 1;
+    public final static String NAME = "nisi eiusmod";
+    public final static String DESCRIPTION = "adipisicing";
+    public final static LocalDate RELEASE_DATA = LocalDate.of(1967, 3, 25);
+    public final static Integer DURATION = 100;
     private Validator validator;
     private Film film;
 
