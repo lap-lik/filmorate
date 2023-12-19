@@ -14,13 +14,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class UserTest {
-    public final static Integer ID = 1;
-    public final static String EMAIL = "mail@mail.ru";
-    public final static String LOGIN = "dolore";
-    public final static String NAME = "Nick Name";
-    public final static LocalDate BIRTHDAY = LocalDate.of(1946, 8, 20);
-    private Validator validator;
-    private User user;
+    public static final Integer ID = 1;
+    public static final String EMAIL = "mail@mail.ru";
+    public static final String LOGIN = "dolore";
+    public static final String NAME = "Nick Name";
+    public static final LocalDate BIRTHDAY = LocalDate.of(1946, 8, 20);
+    public Validator validator;
+    public User user;
 
     @BeforeEach
     void setUp() {
