@@ -13,13 +13,20 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class FilmTest {
-    public static final Integer ID = 1;
-    public static final String NAME = "nisi eiusmod";
-    public static final String DESCRIPTION = "adipisicing";
-    public static final LocalDate RELEASE_DATA = LocalDate.of(1967, 3, 25);
-    public static final Integer DURATION = 100;
-    public Validator validator;
-    public Film film;
+    private static final String INVALIDED_DESCRIPTION =
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+            "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" +
+            "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" +
+            "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD" +
+            "1";
+    private Validator validator;
+    private final Film film = Film.builder()
+            .id(1)
+            .name("nisi eiusmod")
+            .description("adipisicing")
+            .releaseDate(LocalDate.of(1967, 3, 25))
+            .duration(100)
+            .build();
 
     @BeforeEach
     void setUp() {
@@ -30,13 +37,8 @@ class FilmTest {
 
     @Test
     void validateFilmNameEmpty() {
-        film = Film.builder()
-                .id(ID)
-                .name("")
-                .description(DESCRIPTION)
-                .releaseDate(RELEASE_DATA)
-                .duration(DURATION)
-                .build();
+        film.setName("");
+
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertEquals(1, violations.size());
         assertEquals("Название фильма не может быть пустым.", violations.iterator().next().getMessage());
@@ -44,17 +46,8 @@ class FilmTest {
 
     @Test
     void validateCreateFilmDescriptionMaxSize() {
-        film = Film.builder()
-                .id(ID)
-                .name(NAME)
-                .description("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
-                        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" +
-                        "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" +
-                        "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD" +
-                        "1")
-                .releaseDate(RELEASE_DATA)
-                .duration(DURATION)
-                .build();
+        film.setDescription(INVALIDED_DESCRIPTION);
+
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertEquals(1, violations.size());
         assertEquals("Максимальная длина описания — 200 символов.", violations.iterator().next().getMessage());
@@ -62,13 +55,8 @@ class FilmTest {
 
     @Test
     void validateFilmReleaseDateInvalided() {
-        film = Film.builder()
-                .id(ID)
-                .name(NAME)
-                .description(DESCRIPTION)
-                .releaseDate(LocalDate.of(1895, 12, 27))
-                .duration(DURATION)
-                .build();
+        film.setReleaseDate(LocalDate.of(1895, 12, 27));
+
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertEquals(1, violations.size());
         assertEquals("Дата релиза фильма не должна быть раньше 28 декабря 1895 года.",
@@ -77,13 +65,8 @@ class FilmTest {
 
     @Test
     void validateFilmDurationInvalided() {
-        film = Film.builder()
-                .id(ID)
-                .name(NAME)
-                .description(DESCRIPTION)
-                .releaseDate(RELEASE_DATA)
-                .duration(-1)
-                .build();
+        film.setDuration(-1);
+
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertEquals(1, violations.size());
         assertEquals("Продолжительность фильма должна быть положительной.",
