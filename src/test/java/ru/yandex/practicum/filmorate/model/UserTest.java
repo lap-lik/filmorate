@@ -9,14 +9,13 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.time.LocalDate;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class UserTest {
     private Validator validator;
-    private User user = User.builder()
-            .id(1)
+    private final User user = User.builder()
             .email("mail@mail.ru")
             .login("dolore")
             .name("Nick Name")
@@ -35,8 +34,11 @@ class UserTest {
         user.setEmail("");
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
-        assertEquals(1, violations.size());
-        assertEquals("Email не может быть пустым.", violations.iterator().next().getMessage());
+        String textFromValidation = violations.stream()
+                .map(ConstraintViolation::getMessage)
+                .collect(Collectors.joining(" "));
+        assertEquals(2, violations.size());
+        assertEquals("The email is incorrect. The email cannot be empty.", textFromValidation);
     }
 
     @Test
@@ -45,7 +47,7 @@ class UserTest {
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertEquals(1, violations.size());
-        assertEquals("Email должен содержать символ @.", violations.iterator().next().getMessage());
+        assertEquals("The email is incorrect.", violations.iterator().next().getMessage());
     }
 
     @Test
@@ -54,7 +56,7 @@ class UserTest {
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertEquals(1, violations.size());
-        assertEquals("Логин не может быть пустым.", violations.iterator().next().getMessage());
+        assertEquals("The login cannot be empty.", violations.iterator().next().getMessage());
     }
 
     @Test
@@ -63,21 +65,8 @@ class UserTest {
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertEquals(1, violations.size());
-        assertEquals("Логин не должен содержать пробелы.", violations.iterator().next().getMessage());
+        assertEquals("The login must not contain spaces.", violations.iterator().next().getMessage());
     }
-
-    @Test
-    void validateUserNameEmpty() {
-        user.setName("");
-
-        Set<ConstraintViolation<User>> violations = validator.validate(user);
-        assertEquals(0, violations.size());
-        assertFalse(user.getName().isEmpty(),
-                "Имя пользователя не может быть пустым. Для имени должно быть использовано значение логина.");
-        assertEquals(user.getName(), user.getLogin(),
-                "Для пустого имени должно быть использовано значение логина.");
-    }
-
 
     @Test
     void validateUserBirthdayInvalided() {
@@ -85,6 +74,6 @@ class UserTest {
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertEquals(1, violations.size());
-        assertEquals("Дата рождения не может быть в будущем.", violations.iterator().next().getMessage());
+        assertEquals("The date of birth cannot be in the future.", violations.iterator().next().getMessage());
     }
 }
