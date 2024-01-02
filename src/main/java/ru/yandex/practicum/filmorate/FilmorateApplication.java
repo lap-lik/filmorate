@@ -1,21 +1,23 @@
 package ru.yandex.practicum.filmorate;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+@Slf4j
 @SpringBootApplication
 public class FilmorateApplication implements CommandLineRunner {
-
-    @Value("${server.port}")
-    private String serverPort;
+    @Value("${custom.url}")
+    private String customUrl;
 
     public static void main(String[] args) {
         SpringApplication.run(FilmorateApplication.class, args);
     }
 
-    public void run(String... args) {
-        System.out.println("Filmorate path: https://localhost:" + serverPort + "/films");
+    @Override
+    public void run(String... args) throws Exception {
+        log.info("Filmorate url: {}", customUrl);
     }
 }

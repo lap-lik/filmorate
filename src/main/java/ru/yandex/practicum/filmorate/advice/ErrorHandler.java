@@ -11,11 +11,9 @@ import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.BadRequestException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidException;
-import ru.yandex.practicum.filmorate.validator.RequestValidator;
-
 
 @Slf4j
-@RestControllerAdvice(assignableTypes = {RequestValidator.class, FilmController.class, UserController.class})
+@RestControllerAdvice(assignableTypes = {FilmController.class, UserController.class})
 public class ErrorHandler {
 
     @ExceptionHandler

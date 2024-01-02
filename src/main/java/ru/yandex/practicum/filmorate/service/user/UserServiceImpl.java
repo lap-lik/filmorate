@@ -23,11 +23,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User createUser(User newUser) {
-        log.info("Request to create a user: {}", newUser);
+        log.info("Request to create a user: ID - `{}` Name - `{}`.", newUser.getId(), newUser.getName());
         requestValidator.validationRequest(newUser);
         validateUserName(newUser);
         User user = userDao.saveUser(newUser);
-        log.info("The user has been created: {}", user);
+        log.info("The user has been created: ID - `{}` Name - `{}`.", user.getId(), user.getName());
         return user;
     }
 
@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> NotFoundException.builder()
                         .message(String.format("The user with the ID - `%d` was not found.", userId))
                         .httpStatus(NOT_FOUND).build());
-        log.info("A user has been received: {}", user);
+        log.info("A user has been received: ID - `{}` Name - `{}`.", user.getId(), user.getName());
         return user;
     }
 
@@ -56,14 +56,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User updateUser(User updateUser) {
-        log.info("User update request - {}.", updateUser);
+        log.info("User update request: ID - `{}` Name - `{}`..", updateUser.getId(), updateUser.getName());
         requestValidator.validationRequest(updateUser);
         validateUserName(updateUser);
         User user = userDao.updateUser(updateUser)
                 .orElseThrow(() -> NotFoundException.builder()
                         .message(String.format("The user %s was not found.", updateUser.getLogin()))
                         .httpStatus(NOT_FOUND).build());
-        log.info("User has been updated: {}", user);
+        log.info("User has been updated: ID - `{}` Name - `{}`.", user.getId(), user.getName());
         return user;
     }
 
@@ -74,7 +74,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> NotFoundException.builder()
                         .message(String.format("The user with the ID - `%d` was not found.", userId))
                         .httpStatus(NOT_FOUND).build());
-        log.info("The user has been deleted: {}", user);
+        log.info("The user has been deleted: ID - `{}` Name - `{}`.", user.getId(), user.getName());
         return user;
     }
 
@@ -84,7 +84,7 @@ public class UserServiceImpl implements UserService {
                 friendId, userId);
         checkAddedFriend(userId, friendId);
         User friend = userDao.addFriend(userId, friendId);
-        log.info("Friend has been added: {}", friend);
+        log.info("Friend has been added: ID - `{}` Name - `{}`.", friend.getId(), friend.getName());
     }
 
     @Override
@@ -110,7 +110,7 @@ public class UserServiceImpl implements UserService {
                 "from the list of friends of a user with the ID - `{}`.", friendId, userId);
         checkDeletedFriend(userId, friendId);
         User friend = userDao.deleteFriendById(userId, friendId);
-        log.info("The user has been deleted from friends: {}", friend);
+        log.info("The user has been deleted from friends: ID - `{}` Name - `{}`.", friend.getId(), friend.getName());
     }
 
     @Override
