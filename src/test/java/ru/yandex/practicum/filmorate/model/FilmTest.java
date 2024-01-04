@@ -15,13 +15,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class FilmTest {
     private static final String INVALIDED_DESCRIPTION =
             "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
-            "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" +
-            "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" +
-            "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD" +
-            "1";
+                    "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" +
+                    "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" +
+                    "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD" +
+                    "1";
     private Validator validator;
     private final Film film = Film.builder()
-            .id(1)
             .name("nisi eiusmod")
             .description("adipisicing")
             .releaseDate(LocalDate.of(1967, 3, 25))
@@ -41,7 +40,7 @@ class FilmTest {
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertEquals(1, violations.size());
-        assertEquals("Название фильма не может быть пустым.", violations.iterator().next().getMessage());
+        assertEquals("The title of the film cannot be empty.", violations.iterator().next().getMessage());
     }
 
     @Test
@@ -50,7 +49,8 @@ class FilmTest {
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertEquals(1, violations.size());
-        assertEquals("Максимальная длина описания — 200 символов.", violations.iterator().next().getMessage());
+        assertEquals("The description of the movie should be min 1 character, max 200 characters.",
+                violations.iterator().next().getMessage());
     }
 
     @Test
@@ -59,7 +59,7 @@ class FilmTest {
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertEquals(1, violations.size());
-        assertEquals("Дата релиза фильма не должна быть раньше 28 декабря 1895 года.",
+        assertEquals("The release date of the film should not be earlier than 1895-12-28.",
                 violations.iterator().next().getMessage());
     }
 
@@ -69,7 +69,7 @@ class FilmTest {
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertEquals(1, violations.size());
-        assertEquals("Продолжительность фильма должна быть положительной.",
+        assertEquals("The duration of the film should be positive.",
                 violations.iterator().next().getMessage());
     }
 }
