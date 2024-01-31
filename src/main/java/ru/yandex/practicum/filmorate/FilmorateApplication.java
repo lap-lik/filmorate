@@ -12,12 +12,13 @@ public class FilmorateApplication implements CommandLineRunner {
     @Value("${custom.url}")
     private String customUrl;
 
+
     public static void main(String[] args) {
         SpringApplication.run(FilmorateApplication.class, args);
     }
 
     @Override
-    public void run(String... args) throws Exception {
-        log.info("Filmorate url: {}", customUrl);
+    public void run(String... args) {
+        log.info("Filmorate started at url: {}", customUrl);
     }
 }
