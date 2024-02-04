@@ -6,7 +6,6 @@ import ru.yandex.practicum.filmorate.validation.Marker;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.Set;
 
 import static ru.yandex.practicum.filmorate.constant.UserConstant.EMAIL_REGEX;
@@ -34,5 +33,5 @@ public class UserDTO {
     @PastOrPresent(message = "The date of birth cannot be in the future.")
     private LocalDate birthday;
 
-    private final Set<Long> friends = new HashSet<>();
+    private Set<Long> friends;
 }

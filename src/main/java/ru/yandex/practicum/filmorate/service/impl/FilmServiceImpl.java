@@ -4,11 +4,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
+import ru.yandex.practicum.filmorate.dao.MpaDao;
 import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.dto.FilmDTO;
 import ru.yandex.practicum.filmorate.exception.BadRequestException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.utils.ValidatorUtils;
 import ru.yandex.practicum.filmorate.validation.Marker;
@@ -26,14 +29,17 @@ public class FilmServiceImpl implements FilmService {
 
     private final FilmDao filmDao;
     private final UserDao userDao;
+    private final MpaDao mpaDao;
     private final FilmMapper mapper;
 
     @Autowired
     public FilmServiceImpl(@Qualifier(value = FILM_DAO_IMPL) FilmDao filmDao,
                            @Qualifier(value = USER_DAO_IMPL) UserDao userDao,
+                           MpaDao mpaDao,
                            FilmMapper mapper) {
         this.filmDao = filmDao;
         this.userDao = userDao;
+        this.mpaDao = mpaDao;
         this.mapper = mapper;
     }
 
@@ -42,7 +48,12 @@ public class FilmServiceImpl implements FilmService {
 
         ValidatorUtils.validate(filmDTO, Marker.OnCreate.class);
 
-        return mapper.toDTO(filmDao.save(mapper.toEntity(filmDTO)));
+        Film film = filmDao.save(mapper.toEntity(filmDTO));
+        Long mpaId = film.getMpa().getId();
+
+        film.setMpa(findMpa(mpaId));
+
+        return mapper.toDTO(film);
     }
 
     @Override
@@ -66,11 +77,16 @@ public class FilmServiceImpl implements FilmService {
 
         ValidatorUtils.validate(filmDTO, Marker.OnUpdate.class);
 
-        return mapper.toDTO(filmDao.update(mapper.toEntity(filmDTO))
+        Film film = filmDao.update(mapper.toEntity(filmDTO))
                 .orElseThrow(() -> NotFoundException.builder()
-                        .message(String.format("The film `%s` was not found.", filmDTO.getName()))
-                        .httpStatus(NOT_FOUND)
-                        .build()));
+                .message(String.format("The film `%s` was not found.", filmDTO.getName()))
+                .httpStatus(NOT_FOUND)
+                .build());
+        Long mpaId = film.getMpa().getId();
+
+        film.setMpa(findMpa(mpaId));
+
+        return mapper.toDTO(film);
     }
 
     @Override
@@ -111,7 +127,7 @@ public class FilmServiceImpl implements FilmService {
     public void deleteLike(Long filmId, Long userId) {
 
         checkIds(filmId, userId);
-        boolean isDeletedLike = filmDao.removeLike(filmId, userId);
+        boolean isDeletedLike = filmDao.deleteLike(filmId, userId);
 
         if (!isDeletedLike) {
             throw BadRequestException.builder()
@@ -120,6 +136,14 @@ public class FilmServiceImpl implements FilmService {
                     .httpStatus(BAD_REQUEST)
                     .build();
         }
+    }
+
+    private Mpa findMpa(Long mpaId) {
+
+        return mpaDao.findById(mpaId).orElseThrow(() -> NotFoundException.builder()
+                .message(String.format("The MPA with the ID - `%d` was not found.", mpaId))
+                .httpStatus(NOT_FOUND)
+                .build());
     }
 
     private void checkIds(Long filmId, Long userId) {

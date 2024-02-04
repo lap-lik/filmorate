@@ -37,5 +37,5 @@ public interface FilmDao extends GenericDao<Film, Long> {
      * @param userId The ID of the user who unlikes the film.
      * @return true if the like is removed successfully, false otherwise.
      */
-    boolean removeLike(final Long filmId, final Long userId);
+    boolean deleteLike(final Long filmId, final Long userId);
 }

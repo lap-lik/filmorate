@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.dao.impl;
+package ru.yandex.practicum.filmorate.dao.impl.memory;
 
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
@@ -73,7 +73,7 @@ public class FilmDaoInMemoryImpl implements FilmDao {
     }
 
     @Override
-    public boolean removeLike(Long filmId, Long userId) {
+    public boolean deleteLike(Long filmId, Long userId) {
 
         return FILMS.get(filmId).getLikedUserIds().remove(userId);
     }

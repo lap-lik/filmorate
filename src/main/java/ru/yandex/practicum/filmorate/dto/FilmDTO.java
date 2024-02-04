@@ -9,7 +9,6 @@ import ru.yandex.practicum.filmorate.validation.anatation.AfterDate;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.Set;
 
 import static ru.yandex.practicum.filmorate.constant.FilmConstant.RELEASE_DATA;
@@ -22,7 +21,7 @@ public class FilmDTO {
     @NotNull(groups = Marker.OnUpdate.class, message = "The ID must not be empty.")
     private Long id;
 
-    @NotBlank(message = "The title of the film must not be empty.")
+    @NotBlank(message = "The name of the film must not be empty.")
     private String name;
 
     @Size(min = 1, max = 200, message = "The description of the movie should be min 1 character, max 200 characters.")
@@ -36,9 +35,12 @@ public class FilmDTO {
     @Positive(message = "The duration of the film should be positive.")
     private Integer duration;
 
-    private Mpa mpaRating;
+    private Integer rate;
 
-    private final Set<Long> likedUserIds = new HashSet<>();
+    @NotNull(message = "The MPA rating of the film must not be empty.")
+    private Mpa mpa;
 
-    private final Set<Genre> genres = new HashSet<>();
+    private Set<Long> likedUserIds;
+
+    private Set<Genre> genres;
 }

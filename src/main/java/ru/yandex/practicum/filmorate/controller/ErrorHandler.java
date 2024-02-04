@@ -16,7 +16,10 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Slf4j
-@RestControllerAdvice(assignableTypes = {FilmController.class, UserController.class})
+@RestControllerAdvice(assignableTypes = {FilmController.class,
+        UserController.class,
+        GenreController.class,
+        MpaController.class})
 public class ErrorHandler {
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)

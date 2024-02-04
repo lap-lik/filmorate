@@ -1,0 +1,10 @@
+# select film
+SELECT f.*, m.name AS mpa_name, g.id AS genre_id, g.name AS genre_name, l.user_id AS user_id
+FROM films AS f
+    LEFT OUTER JOIN mpa AS m ON f.mpa_id = m.id
+    LEFT OUTER JOIN film_genre AS fg ON f.id = fg.film_id
+    LEFT OUTER JOIN genres AS g ON fg.genre_id = g.id
+    LEFT OUTER JOIN likes AS l ON f.id = l.film_id
+WHERE f.id = 1
+
+

@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.dao.impl;
+package ru.yandex.practicum.filmorate.dao.impl.memory;
 
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dao.UserDao;

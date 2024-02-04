@@ -16,6 +16,6 @@ public class GenreDTO {
     @NotNull(groups = Marker.OnUpdate.class, message = "The ID must not be empty.")
     private Long id;
 
-    @NotBlank(message = "The title of the genre must not be empty.")
+    @NotBlank(message = "The name of the genre must not be empty.")
     private String name;
 }
