@@ -10,23 +10,78 @@ import ru.yandex.practicum.filmorate.model.User;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository(value = "userDB")
 @RequiredArgsConstructor
 public class UserDaoDBImpl implements UserDao {
 
-    public static final String SAVE_USER = "INSERT INTO users (email, login, name, birthday) " +
-            "VALUES (?, ?, ?, ?)";
-    public static final String FIND_USERS = "SELECT u.*, f.user_is AS user_id " +
-            "FROM users AS u " +
-            "LEFT OUTER JOIN friendships AS f ON u.id = f.user_1";
-    public static final String UPDATE_USER = "UPDATE users SET name = ?, email = ?, login = ?, name = ?, birthday = ?" +
-            "WHERE id = ?";
+    public static final String SAVE_USER = "INSERT INTO users (email, login, name, birthday) VALUES (?, ?, ?, ?)";
+    public static final String FIND_USERS = "SELECT u.*, f.user_1, f.user_2, f.friendship_status " +
+            "FROM users AS u LEFT JOIN  friendships AS f ON u.id = f.user_1 OR u.id = f.user_2";
+
+
+
+    public static final String FIND_USER = "SELECT u.*, " +
+            "(SELECT GROUP_CONCAT(CASE " +
+            "WHEN f.user_1 = u.id THEN f.user_2 " +
+            "WHEN f.user_2 = u.id THEN f.user_1 END " +
+            "ORDER BY CASE " +
+            "WHEN f.user_1 = u.id THEN f.user_2 " +
+            "WHEN f.user_2 = u.id THEN f.user_1 END SEPARATOR ',') " +
+            "FROM friendships f " +
+            "WHERE (f.user_1 = u.id OR f.user_2 = u.id) AND f.friendship_status = TRUE) AS friends_ids " +
+            "FROM users u";
+
+    @Override
+    public List<User> findAll() {
+
+        String sql = FIND_USER;
+
+        List<User> users = jdbcTemplate.query(sql, this::mapRowToUser1);
+
+        return users.stream()
+                .sorted(Comparator.comparing(User::getId))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<User> findById(Long userId) {
+
+        String sql = FIND_USER + " WHERE u.id = ?";
+
+        List<User> users = jdbcTemplate.query(sql, this::mapRowToUser1, userId);
+
+        return users.stream().findFirst();
+    }
+
+    private User mapRowToUser1(ResultSet resultSet, int rowNum) throws SQLException {
+
+        String str = resultSet.getString("friends_ids");
+        Set<Long> ids = new TreeSet<>();
+        if (str != null) {
+            String[] split = str.split(",");
+            ids.addAll(Arrays.stream(split).map(Long::valueOf).collect(Collectors.toList()));
+        }
+
+        return User.builder()
+                .id(resultSet.getLong("id"))
+                .email(resultSet.getString("email"))
+                .login(resultSet.getString("login"))
+                .name(resultSet.getString("name"))
+                .birthday(resultSet.getDate("birthday").toLocalDate())
+                .friends(new TreeSet<>(ids))
+                .build();
+    }
+
+    public static final String UPDATE_USER = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE id = ?";
     public static final String DELETE_USER_BY_ID = "DELETE FROM users WHERE id = ?";
     public static final String IS_EXIST_USER_BY_ID = "SELECT EXISTS (SELECT 1 FROM users WHERE id=?)";
+    public static final String DELETE_FRIEND = "DELETE FROM friendships " +
+            "WHERE (user_1 = ? AND user_2 = ?) OR (user_1 = ? AND user_2 = ?)";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -40,7 +95,7 @@ public class UserDaoDBImpl implements UserDao {
     @Override
     public User save(User user) {
 
-        String sql = "INSERT INTO users (email, login, name, birthday) VALUES (?, ?, ?, ?)";
+        String sql = SAVE_USER;
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
         jdbcTemplate.update(connection -> {
@@ -55,34 +110,72 @@ public class UserDaoDBImpl implements UserDao {
         Long userId = Objects.requireNonNull(keyHolder.getKey()).longValue();
 
         user.setId(userId);
+        user.setFriends(new TreeSet<>());
 
         return user;
     }
 
-    @Override
-    public Optional<User> findById(Long userId) {
-        return Optional.empty();
-    }
+//    @Override
+//    public Optional<User> findById(Long userId) {
+//
+//        String sql = FIND_USERS + " WHERE u.id = ?";
+//        Map<Long, User> userMap = new HashMap<>();
+//
+//        jdbcTemplate.query(sql, resultSet -> {
+//            User user = getUser(resultSet, userMap);
+//            userMap.put(user.getId(), user);
+//        }, userId);
+//
+//        return userMap.values().stream().findFirst();
+//    }
 
-    @Override
-    public List<User> findAll() {
-        return null;
-    }
+//    @Override
+//    public List<User> findAll() {
+//
+//        String sql = FIND_USERS;
+//        Map<Long, User> userMap = new HashMap<>();
+//
+//        jdbcTemplate.query(sql, resultSet -> {
+//            User user = getUser(resultSet, userMap);
+//            userMap.put(user.getId(), user);
+//        });
+//
+//        return userMap.values().stream()
+//                .sorted(Comparator.comparing(User::getId))
+//                .collect(Collectors.toList());
+//    }
 
     @Override
     public Optional<User> update(User user) {
-        return Optional.empty();
+
+        Long userId = user.getId();
+        String sql = UPDATE_USER;
+
+        int rowsUpdated = jdbcTemplate.update(sql, user.getEmail(), user.getLogin(), user.getName(), user.getBirthday(), user);
+
+        if (rowsUpdated == 0) {
+            return Optional.empty();
+        }
+
+        user.setFriends(getFriendsIds(userId));
+
+        return Optional.of(user);
     }
 
     @Override
     public boolean deleteById(Long userId) {
-        return false;
+
+        String sql = DELETE_USER_BY_ID;
+
+        int isFilmDelete = jdbcTemplate.update(sql, userId);
+
+        return isFilmDelete > 0;
     }
 
     @Override
     public boolean isExistsById(Long userId) {
 
-        String sql = "SELECT EXISTS (SELECT 1 FROM users WHERE id=?)";
+        String sql = IS_EXIST_USER_BY_ID;
 
         return Boolean.TRUE.equals(jdbcTemplate.queryForObject(sql, Boolean.class, userId));
     }
@@ -104,6 +197,66 @@ public class UserDaoDBImpl implements UserDao {
 
     @Override
     public boolean deleteFriend(Long userId, Long friendId) {
-        return false;
+
+        String sql = DELETE_FRIEND;
+
+        int isFriendDeleted = jdbcTemplate.update(sql, userId, friendId, friendId, userId);
+
+        return isFriendDeleted > 0;
+    }
+
+    private User getUser(ResultSet resultSet, Map<Long, User> userMap) throws SQLException {
+
+        long id = resultSet.getLong("id");
+        User user = userMap.get(id);
+
+        if (user == null) {
+            user = mapRowToUser(resultSet, 0);
+            userMap.put(id, user);
+        }
+
+        if (resultSet.getBoolean("friendship_status")) {
+            Set<Long> usersIds = user.getFriends();
+            long userId1 = resultSet.getLong("user_1");
+            long userId2 = resultSet.getLong("user_2");
+            if (userId1 != id) {
+                usersIds.add(userId1);
+            } else {
+                usersIds.add(userId2);
+            }
+        }
+
+        return user;
+    }
+
+    private User mapRowToUser(ResultSet resultSet, int rowNum) throws SQLException {
+
+        return User.builder()
+                .id(resultSet.getLong("id"))
+                .email(resultSet.getString("email"))
+                .login(resultSet.getString("login"))
+                .name(resultSet.getString("name"))
+                .birthday(resultSet.getDate("birthday").toLocalDate())
+                .friends(new TreeSet<>())
+                .build();
+    }
+
+    private Set<Long> getFriendsIds(Long userId) {
+        String sql = "SELECT user_1, user_2 FROM friendships WHERE (user_1 = ? OR user_2 = ?) AND friendship_status = true";
+
+        Set<Long> friendsIds = new TreeSet<>();
+
+        jdbcTemplate.query(sql, rs -> {
+            long user1 = rs.getLong("user_1");
+            long user2 = rs.getLong("user_2");
+            if (user1 != userId) {
+                friendsIds.add(user1);
+            }
+            if (user2 != userId) {
+                friendsIds.add(user2);
+            }
+        }, userId, userId);
+
+        return friendsIds;
     }
 }

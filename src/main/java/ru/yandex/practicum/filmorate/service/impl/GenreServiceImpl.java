@@ -31,11 +31,10 @@ public class GenreServiceImpl implements GenreService {
     @Override
     public GenreDTO getById(Long genreId) {
 
-        return mapper.toDTO(genreDao.findById(genreId)
-                .orElseThrow(() -> NotFoundException.builder()
-                        .message(String.format("The genre with the ID - `%d` was not found.", genreId))
-                        .httpStatus(NOT_FOUND)
-                        .build()));
+        return mapper.toDTO(genreDao.findById(genreId).orElseThrow(() -> NotFoundException.builder()
+                .message(String.format("The genre with the ID - `%d` was not found.", genreId))
+                .httpStatus(NOT_FOUND)
+                .build()));
     }
 
     @Override
@@ -49,11 +48,10 @@ public class GenreServiceImpl implements GenreService {
 
         ValidatorUtils.validate(genreDTO, Marker.OnUpdate.class);
 
-        return mapper.toDTO(genreDao.update(mapper.toEntity(genreDTO))
-                .orElseThrow(() -> NotFoundException.builder()
-                        .message(String.format("The film `%s` was not found.", genreDTO.getName()))
-                        .httpStatus(NOT_FOUND)
-                        .build()));
+        return mapper.toDTO(genreDao.update(mapper.toEntity(genreDTO)).orElseThrow(() -> NotFoundException.builder()
+                .message(String.format("The film `%s` was not found.", genreDTO.getName()))
+                .httpStatus(NOT_FOUND)
+                .build()));
     }
 
     @Override

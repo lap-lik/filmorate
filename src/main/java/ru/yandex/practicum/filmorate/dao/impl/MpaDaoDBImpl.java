@@ -21,8 +21,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MpaDaoDBImpl implements MpaDao {
     public static final String SAVE_MPA = "INSERT INTO mpa (name) VALUES (?)";
-    public static final String FIND_MPA_BY_ID = "SELECT * FROM mpa WHERE id = ?";
-    public static final String FIND_ALL_MPA_RATINGS = "SELECT * FROM mpa";
+    public static final String FIND_MPA_RATINGS = "SELECT * FROM mpa";
     public static final String UPDATE_MPA = "UPDATE mpa SET name = ? WHERE id = ?";
     public static final String DELETE_MPA_BY_ID = "DELETE FROM mpa WHERE id = ?";
     public static final String IS_EXIST_MPA_BY_ID = "SELECT EXISTS (SELECT 1 FROM mpa WHERE id=?)";
@@ -66,7 +65,7 @@ public class MpaDaoDBImpl implements MpaDao {
     @Override
     public Optional<Mpa> findById(Long mpaId) {
 
-        String sql = FIND_MPA_BY_ID;
+        String sql = FIND_MPA_RATINGS + " WHERE id = ?";
 
         List<Mpa> mpaRatings = jdbcTemplate.query(sql, this::mapRowToMpa, mpaId);
 
@@ -76,7 +75,7 @@ public class MpaDaoDBImpl implements MpaDao {
     @Override
     public List<Mpa> findAll() {
 
-        String sql = FIND_ALL_MPA_RATINGS;
+        String sql = FIND_MPA_RATINGS;
 
         List<Mpa> mpaRatings = jdbcTemplate.query(sql, this::mapRowToMpa);
 

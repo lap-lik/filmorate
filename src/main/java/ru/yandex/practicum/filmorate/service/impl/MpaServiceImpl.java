@@ -31,11 +31,10 @@ public class MpaServiceImpl implements MpaService {
     @Override
     public MpaDTO getById(Long mpaId) {
 
-        return mapper.toDTO(mpaDao.findById(mpaId)
-                .orElseThrow(() -> NotFoundException.builder()
-                        .message(String.format("The MPA rating with the ID - `%d` was not found.", mpaId))
-                        .httpStatus(NOT_FOUND)
-                        .build()));
+        return mapper.toDTO(mpaDao.findById(mpaId).orElseThrow(() -> NotFoundException.builder()
+                .message(String.format("The MPA rating with the ID - `%d` was not found.", mpaId))
+                .httpStatus(NOT_FOUND)
+                .build()));
     }
 
     @Override
@@ -49,11 +48,10 @@ public class MpaServiceImpl implements MpaService {
 
         ValidatorUtils.validate(mpaDTO, Marker.OnUpdate.class);
 
-        return mapper.toDTO(mpaDao.update(mapper.toEntity(mpaDTO))
-                .orElseThrow(() -> NotFoundException.builder()
-                        .message(String.format("The MPA rating `%s` was not found.", mpaDTO.getName()))
-                        .httpStatus(NOT_FOUND)
-                        .build()));
+        return mapper.toDTO(mpaDao.update(mapper.toEntity(mpaDTO)).orElseThrow(() -> NotFoundException.builder()
+                .message(String.format("The MPA rating `%s` was not found.", mpaDTO.getName()))
+                .httpStatus(NOT_FOUND)
+                .build()));
     }
 
     @Override

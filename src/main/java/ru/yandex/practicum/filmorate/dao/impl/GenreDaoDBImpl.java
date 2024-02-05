@@ -21,8 +21,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class GenreDaoDBImpl implements GenreDao {
     public static final String SAVE_GENRE = "INSERT INTO genres (name) VALUES (?)";
-    public static final String FIND_GENRE_BY_ID = "SELECT * FROM genres WHERE id = ?";
-    public static final String FIND_ALL_GENRES = "SELECT * FROM genres";
+    public static final String FIND_GENRES = "SELECT * FROM genres";
     public static final String UPDATE_GENRE = "UPDATE genres SET name = ? WHERE id = ?";
     public static final String DELETE_GENRE_BY_ID = "DELETE FROM genres WHERE id = ?";
     public static final String IS_EXIST_GENRE_BY_ID = "SELECT EXISTS (SELECT 1 FROM genres WHERE id=?)";
@@ -66,7 +65,7 @@ public class GenreDaoDBImpl implements GenreDao {
     @Override
     public Optional<Genre> findById(Long genreId) {
 
-        String sql = FIND_GENRE_BY_ID;
+        String sql = FIND_GENRES + " WHERE id = ?";
 
         List<Genre> genres = jdbcTemplate.query(sql, this::mapRowToGenre, genreId);
 
@@ -76,7 +75,7 @@ public class GenreDaoDBImpl implements GenreDao {
     @Override
     public List<Genre> findAll() {
 
-        String sql = FIND_ALL_GENRES;
+        String sql = FIND_GENRES;
 
         List<Genre> genres = jdbcTemplate.query(sql, this::mapRowToGenre);
 
