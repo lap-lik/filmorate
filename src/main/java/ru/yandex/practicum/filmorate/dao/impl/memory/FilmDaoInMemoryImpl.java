@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 @Repository(value = "filmMemory")
 public class FilmDaoInMemoryImpl implements FilmDao {
 
-    public final Map<Long, Film> FILMS = new HashMap<>();
+    public static final Map<Long, Film> FILMS = new HashMap<>();
     private Long id = 0L;
 
     @Override
