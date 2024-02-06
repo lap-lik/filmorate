@@ -38,13 +38,10 @@ class UserTest {
         userDTO.setEmail("");
 
         Set<ConstraintViolation<UserDTO>> violations = validator.validate(userDTO);
-        String textFromValidation = violations.stream()
-                .map(ConstraintViolation::getMessage)
-                .sorted()
-                .collect(Collectors.joining(" "));
+        String textFromValidation = getViolations(violations);
 
         assertEquals(2, violations.size());
-        assertEquals(textFromValidation, "The email cannot be empty. The email is incorrect.");
+        assertEquals(textFromValidation, "The email is incorrect. The email must not be empty.");
     }
 
     @Test
@@ -54,9 +51,10 @@ class UserTest {
         userDTO.setEmail("email.ru");
 
         Set<ConstraintViolation<UserDTO>> violations = validator.validate(userDTO);
+        String textFromValidation = getViolations(violations);
 
         assertEquals(1, violations.size());
-        assertEquals(violations.iterator().next().getMessage(), "The email is incorrect.");
+        assertEquals(textFromValidation, "The email is incorrect.");
     }
 
     @Test
@@ -66,13 +64,10 @@ class UserTest {
         userDTO.setLogin("");
 
         Set<ConstraintViolation<UserDTO>> violations = validator.validate(userDTO);
-        String textFromValidation = violations.stream()
-                .map(ConstraintViolation::getMessage)
-                .sorted()
-                .collect(Collectors.joining(" "));
+        String textFromValidation = getViolations(violations);
 
         assertEquals(2, violations.size());
-        assertEquals(textFromValidation, "The login cannot be empty. The login must not contain spaces.");
+        assertEquals(textFromValidation, "The login must not be empty. The login must not contain spaces.");
     }
 
     @Test
@@ -82,9 +77,10 @@ class UserTest {
         userDTO.setLogin("do lore");
 
         Set<ConstraintViolation<UserDTO>> violations = validator.validate(userDTO);
+        String textFromValidation = getViolations(violations);
 
         assertEquals(1, violations.size());
-        assertEquals(violations.iterator().next().getMessage(), "The login must not contain spaces.");
+        assertEquals(textFromValidation, "The login must not contain spaces.");
     }
 
     @Test
@@ -94,8 +90,16 @@ class UserTest {
         userDTO.setBirthday(LocalDate.of(2025, 1, 1));
 
         Set<ConstraintViolation<UserDTO>> violations = validator.validate(userDTO);
+        String textFromValidation = getViolations(violations);
 
         assertEquals(1, violations.size());
-        assertEquals(violations.iterator().next().getMessage(), "The date of birth cannot be in the future.");
+        assertEquals(textFromValidation, "The date of birth cannot be in the future.");
+    }
+
+    private String getViolations(Set<ConstraintViolation<UserDTO>> violations) {
+        return violations.stream()
+                .map(ConstraintViolation::getMessage)
+                .sorted()
+                .collect(Collectors.joining(" "));
     }
 }

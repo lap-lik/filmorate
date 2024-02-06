@@ -11,6 +11,7 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.time.LocalDate;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -21,6 +22,7 @@ class FilmTest {
             .name("Star Wars. Episode I: The Phantom Menace")
             .description("Genre: Action, Adventure, Fantasy, Live Action, Science Fiction")
             .releaseDate(LocalDate.of(1999, 5, 19))
+            .mpa(Mpa.builder().id(1L).build())
             .duration(136)
             .build();
 
@@ -38,10 +40,12 @@ class FilmTest {
         filmDTO.setName("");
 
         Set<ConstraintViolation<FilmDTO>> violations = validator.validate(filmDTO);
+        String textFromValidation = getViolations(violations);
 
         assertEquals(1, violations.size());
-        assertEquals(violations.iterator().next().getMessage(), "The title of the film cannot be empty.");
+        assertEquals(textFromValidation, "The name of the film must not be empty.");
     }
+
 
     @Test
     @DisplayName("A test to check the description of more than 200 characters.")
@@ -50,9 +54,10 @@ class FilmTest {
         filmDTO.setDescription(INVALIDED_DESCRIPTION);
 
         Set<ConstraintViolation<FilmDTO>> violations = validator.validate(filmDTO);
+        String textFromValidation = getViolations(violations);
 
         assertEquals(1, violations.size());
-        assertEquals(violations.iterator().next().getMessage(),
+        assertEquals(textFromValidation,
                 "The description of the movie should be min 1 character, max 200 characters.");
     }
 
@@ -63,10 +68,10 @@ class FilmTest {
         filmDTO.setReleaseDate(LocalDate.of(1895, 12, 27));
 
         Set<ConstraintViolation<FilmDTO>> violations = validator.validate(filmDTO);
+        String textFromValidation = getViolations(violations);
 
         assertEquals(1, violations.size());
-        assertEquals(violations.iterator().next().getMessage(),
-                "The release date of the film should not be earlier than 1895-12-28.");
+        assertEquals(textFromValidation, "The release date of the film should not be earlier than 1895-12-28.");
     }
 
     @Test
@@ -76,8 +81,16 @@ class FilmTest {
         filmDTO.setDuration(-1);
 
         Set<ConstraintViolation<FilmDTO>> violations = validator.validate(filmDTO);
+        String textFromValidation = getViolations(violations);
 
         assertEquals(1, violations.size());
-        assertEquals(violations.iterator().next().getMessage(), "The duration of the film should be positive.");
+        assertEquals(textFromValidation, "The duration of the film should be positive.");
+    }
+
+    private String getViolations(Set<ConstraintViolation<FilmDTO>> violations) {
+        return violations.stream()
+                .map(ConstraintViolation::getMessage)
+                .sorted()
+                .collect(Collectors.joining(" "));
     }
 }
