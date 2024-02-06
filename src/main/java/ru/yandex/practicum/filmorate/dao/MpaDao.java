@@ -9,5 +9,5 @@ import ru.yandex.practicum.filmorate.model.Mpa;
  *
  * @see GenericDao
  */
-public interface MpaDao extends GenericDao<Mpa, Long>{
+public interface MpaDao extends GenericDao<Mpa, Long> {
 }

@@ -21,151 +21,17 @@ import java.util.stream.Collectors;
 @Repository(value = "filmDB")
 @RequiredArgsConstructor
 public class FilmDaoDBImpl implements FilmDao {
-    public static final String SAVE_FILM = "INSERT INTO films (name, description, release_date, duration, rate, mpa_id) " +
-            "VALUES (?, ?, ?, ?, ?, ?)";
-
-    public static final String FIND_FILM = "SELECT f.*, m.name AS mpa_name, " +
-            "(SELECT GROUP_CONCAT(CASE " +
-            "WHEN f.id = fg.film_id THEN fg.genre_id END " +
-            "ORDER BY  fg.genre_id  SEPARATOR ',') " +
-            "FROM film_genre AS fg " +
-            "WHERE (fg.film_id = f.id)) AS genre_id, " +
-            "(SELECT GROUP_CONCAT(CASE " +
-            "WHEN fg.genre_id = g.id THEN g.name END " +
-            "ORDER BY g.name  SEPARATOR ',') " +
-            "FROM genres AS g " +
-            "LEFT OUTER JOIN film_genre AS fg ON g.id = fg.genre_id " +
-            "WHERE (fg.film_id = f.id)) AS genre_name, " +
-            "(SELECT GROUP_CONCAT(CASE " +
-            "WHEN f.id = l.film_id THEN l.user_id END " +
-            "ORDER BY  l.user_id  SEPARATOR ',') " +
-            "FROM likes AS l " +
-            "WHERE (l.film_id = f.id)) AS like_user_id " +
-            "FROM films AS f " +
-            "LEFT OUTER JOIN mpa AS m ON f.mpa_id = m.id";
-
-    @Override
-    public Optional<Film> findById(Long filmId) {
-
-        String sql = FIND_FILM + " WHERE f.id = ?";
-
-        List<Film> films = jdbcTemplate.query(sql, this::mapRowToFilm1, filmId);
-
-        return films.stream().findFirst();
-    }
-
-    @Override
-    public List<Film> findAll() {
-
-        String sql = FIND_FILM;
-
-        List<Film> films = jdbcTemplate.query(sql, this::mapRowToFilm1);
-
-        return films.stream()
-                .sorted(Comparator.comparing(Film::getId))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<Film> findPopularFilms(int count) {
-
-        String sql = FIND_FILM + " WHERE f.id IN " +
-                "(SELECT l.film_id FROM likes AS l group by l.film_id order by COUNT(l.user_id) DESC, l.film_id LIMIT ?)";
-
-        List<Film> films = jdbcTemplate.query(sql, this::mapRowToFilm1, count);
-
-        return films.stream()
-                .sorted(Comparator.comparingInt(f -> -f.getLikedUserIds().size()))
-                .collect(Collectors.toList());
-    }
-
-
-    private Film mapRowToFilm1(ResultSet resultSet, int rowNum) throws SQLException {
-
-
-        String strGenresIds = resultSet.getString("genre_id");
-        String strGenresNames = resultSet.getString("genre_name");
-        List<Long> genresIds = new ArrayList<>();
-        List<String> genresNames = new ArrayList<>();
-        if (strGenresIds != null) {
-            String[] splitGenresIds = strGenresIds.split(",");
-            String[] splitGenresNames = strGenresNames.split(",");
-            genresIds.addAll(Arrays.stream(splitGenresIds).map(Long::valueOf).collect(Collectors.toList()));
-            genresNames = List.of(splitGenresNames);
-        }
-
-        String strLikes = resultSet.getString("like_user_id");
-        Set<Long> usersIdsOfLikes = new TreeSet<>();
-        if (strLikes != null) {
-            String[] splitLikes = strLikes.split(",");
-            usersIdsOfLikes.addAll(Arrays.stream(splitLikes).map(Long::valueOf).collect(Collectors.toList()));
-        }
-
-        return Film.builder()
-                .id(resultSet.getLong("id"))
-                .name(resultSet.getString("name"))
-                .description(resultSet.getString("description"))
-                .releaseDate(resultSet.getDate("release_date").toLocalDate())
-                .duration(resultSet.getInt("duration"))
-                .rate((Integer) resultSet.getObject("rate"))
-                .mpa(mapRowToMpa1(resultSet, 0))
-                .genres(getGenres(genresIds, genresNames))
-                .likedUserIds(new TreeSet<>(usersIdsOfLikes))
-                .build();
-    }
-
-    private Set<Genre> getGenres(List<Long> genresIds, List<String> genresNames) {
-        Set<Genre> genres = new TreeSet<>(Comparator.comparing(Genre::getId));
-        if (!genresIds.isEmpty()) {
-            for (int i = 0; i < genresIds.size(); i++) {
-                genres.add(Genre.builder()
-                        .id(genresIds.get(i))
-                        .name(genresNames.get(i))
-                        .build());
-            }
-        }
-        return genres;
-    }
-
-    private Mpa mapRowToMpa1(ResultSet resultSet, int rowNum) throws SQLException {
-
-        return Mpa.builder()
-                .id(resultSet.getLong("mpa_id"))
-                .name(resultSet.getString("mpa_name"))
-                .build();
-    }
-
-
-    public static final String UPDATE_FILM = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, rate = ?, mpa_id = ? " +
-            "WHERE id = ?";
+    public static final String SAVE_FILM = "INSERT INTO films (name, description, release_date, duration, rate, mpa_id) " + "VALUES (?, ?, ?, ?, ?, ?)";
+    public static final String FIND_FILMS = "SELECT f.*, m.name AS mpa_name, " + "(SELECT GROUP_CONCAT(fg.genre_id) FROM film_genre AS fg  WHERE fg.genre_id in (SELECT fg.genre_id " + "FROM film_genre AS fg WHERE (fg.film_id = f.id) ORDER BY fg.genre_id)) AS genre_id, " + "(SELECT GROUP_CONCAT(name) FROM GENRES WHERE id in (SELECT fg.genre_id " + "FROM film_genre AS fg WHERE (fg.film_id = f.id) ORDER BY fg.genre_id)) AS genre_name, " + "(SELECT GROUP_CONCAT(l.user_id) FROM likes AS l WHERE (l.film_id = f.id))  AS like_user_id " + "FROM films f LEFT OUTER JOIN mpa AS m ON f.mpa_id = m.id";
+    public static final String FIND_POPULAR_FILMS = FIND_FILMS + " WHERE f.id IN (SELECT * FROM (SELECT l.film_id " + "FROM likes AS l GROUP BY l.film_id ORDER BY COUNT(l.user_id) DESC " + "LIMIT ?) UNION (SELECT f.id FROM films AS f WHERE f.id NOT IN (SELECT l.film_id " + "FROM likes AS l GROUP BY l.film_id ORDER BY COUNT(l.user_id) DESC LIMIT ?) " + "LIMIT ? - (SELECT COUNT(*) FROM (SELECT l.film_id " + "FROM likes AS l GROUP BY l.film_id ORDER BY COUNT(l.user_id) DESC LIMIT ?))) limit ?)";
+    public static final String FIND_FILM_BY_ID = FIND_FILMS + " WHERE f.id = ?";
+    public static final String UPDATE_FILM = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, rate = ?, mpa_id = ? " + "WHERE id = ?";
     public static final String DELETE_FILM_BY_ID = "DELETE FROM films WHERE id = ?";
     public static final String IS_EXIST_FILM_BY_ID = "SELECT EXISTS (SELECT 1 FROM films WHERE id=?)";
-    public static final String ADD_LIKE = "INSERT INTO likes (film_id, user_id) " +
-            "SELECT ?, ? " +
-            "WHERE NOT EXISTS (SELECT 1 FROM likes WHERE film_id = ? AND user_id = ?)";
-    public static final String FIND_MUST_POPULAR_FILMS = "SELECT f.*, m.name AS mpa_name, g.id AS genre_id, " +
-            "g.name AS genre_name, l.user_id AS user_id " +
-            "FROM films AS f " +
-            "LEFT OUTER JOIN mpa AS m ON f.mpa_id = m.id " +
-            "LEFT OUTER JOIN film_genre AS fg ON f.id = fg.film_id " +
-            "LEFT OUTER JOIN genres AS g ON fg.genre_id = g.id " +
-            "LEFT OUTER JOIN likes AS l ON f.id = l.film_id " +
-            "where f.id in " +
-            "(SELECT l.film_id " +
-            "FROM likes AS l " +
-            "group by l.film_id " +
-            "order by COUNT(l.user_id) DESC, l.film_id " +
-            "LIMIT ?)";
-    public static final String DELETE_LIKE = "DELETE FROM likes " +
-            "WHERE film_id = ? AND user_id = ?";
+    public static final String ADD_LIKE = "INSERT INTO likes (film_id, user_id) " + "SELECT ?, ? " + "WHERE NOT EXISTS (SELECT 1 FROM likes WHERE film_id = ? AND user_id = ?)";
+    public static final String DELETE_LIKE = "DELETE FROM likes " + "WHERE film_id = ? AND user_id = ?";
     public static final String ADD_LINKS_FILM_GENRE = "INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)";
     public static final String DELETE_LINKS_FILM_GENRE = "DELETE FROM film_genre WHERE film_id = ?";
-    public static final String FIND_USERS_ID_WHO_LIKED_FILM_BY_FILM_ID = "SELECT user_id " +
-            "FROM likes " +
-            "WHERE film_id = ?";
-    public static final String FIND_GENRES_BY_FILM_ID = "SELECT id AS genre_id, name AS genre_name " +
-            "FROM genres " +
-            "WHERE id IN (SELECT genre_id FROM film_genre WHERE film_id = ?)";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -190,10 +56,28 @@ public class FilmDaoDBImpl implements FilmDao {
 
         film.setId(filmId);
         addLinksFilmGenre(film);
-        film.setGenres(findGenresByFilmId(filmId));
-        film.setLikedUserIds(new HashSet<>());
 
-        return film;
+        return findById(filmId).orElse(null);
+    }
+
+    @Override
+    public Optional<Film> findById(Long filmId) {
+
+        String sql = FIND_FILM_BY_ID;
+
+        List<Film> films = jdbcTemplate.query(sql, this::mapRowToFilm, filmId);
+
+        return films.stream().findFirst();
+    }
+
+    @Override
+    public List<Film> findAll() {
+
+        String sql = FIND_FILMS;
+
+        List<Film> films = jdbcTemplate.query(sql, this::mapRowToFilm);
+
+        return films.stream().sorted(Comparator.comparing(Film::getId)).collect(Collectors.toList());
     }
 
     @Override
@@ -202,50 +86,16 @@ public class FilmDaoDBImpl implements FilmDao {
         Long filmId = film.getId();
         String sql = UPDATE_FILM;
 
-        int rowsUpdated = jdbcTemplate.update(sql, film.getName(), film.getDescription(), film.getReleaseDate(),
-                film.getDuration(), film.getRate(), film.getMpa().getId(), filmId);
+        int rowsUpdated = jdbcTemplate.update(sql, film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(), film.getRate(), film.getMpa().getId(), filmId);
 
         if (rowsUpdated == 0) {
             return Optional.empty();
         }
 
         addLinksFilmGenre(film);
-        film.setGenres(findGenresByFilmId(filmId));
-        film.setLikedUserIds(findLikesByFilmId(filmId));
 
-        return Optional.of(film);
+        return findById(filmId);
     }
-
-//    @Override
-//    public Optional<Film> findById(Long filmId) {
-//
-//        String sql = FIND_FILMS + " WHERE f.id = ?";
-//        Map<Long, Film> filmMap = new HashMap<>();
-//
-//        jdbcTemplate.query(sql, resultSet -> {
-//            Film film = getFilm(resultSet, filmMap);
-//            filmMap.put(film.getId(), film);
-//        }, filmId);
-//
-//        return filmMap.values().stream()
-//                .findFirst();
-//    }
-
-//    @Override
-//    public List<Film> findAll() {
-//
-//        String sql = FIND_FILMS;
-//        Map<Long, Film> filmMap = new HashMap<>();
-//
-//        jdbcTemplate.query(sql, resultSet -> {
-//            Film film = getFilm(resultSet, filmMap);
-//            filmMap.put(film.getId(), film);
-//        });
-//
-//        return filmMap.values().stream()
-//                .sorted(Comparator.comparing(Film::getId))
-//                .collect(Collectors.toList());
-//    }
 
     @Override
     public boolean deleteById(Long filmId) {
@@ -288,21 +138,15 @@ public class FilmDaoDBImpl implements FilmDao {
         }
     }
 
-//    @Override
-//    public List<Film> findPopularFilms(int count) {
-//
-//        String sql = FIND_MUST_POPULAR_FILMS;
-//        Map<Long, Film> filmMap = new HashMap<>();
-//
-//        jdbcTemplate.query(sql, resultSet -> {
-//            Film film = getFilm(resultSet, filmMap);
-//            filmMap.put(film.getId(), film);
-//        }, count);
-//
-//        return filmMap.values().stream()
-//                .sorted(Comparator.comparingInt(f -> -f.getLikedUserIds().size()))
-//                .collect(Collectors.toList());
-//    }
+    @Override
+    public List<Film> findPopularFilms(int count) {
+
+        String sql = FIND_POPULAR_FILMS;
+
+        List<Film> films = jdbcTemplate.query(sql, this::mapRowToFilm, count, count, count, count, count);
+
+        return films.stream().sorted(Comparator.comparingInt(f -> -f.getLikedUserIds().size())).collect(Collectors.toList());
+    }
 
     @Override
     public boolean deleteLike(Long filmId, Long userId) {
@@ -347,77 +191,39 @@ public class FilmDaoDBImpl implements FilmDao {
         jdbcTemplate.update(sql, filmId);
     }
 
-    private Set<Long> findLikesByFilmId(Long filmId) {
+    private Film mapRowToFilm(ResultSet resultSet, int rowNum) throws SQLException {
 
-        String sql = FIND_USERS_ID_WHO_LIKED_FILM_BY_FILM_ID;
 
-        List<Long> resultList = jdbcTemplate.queryForList(sql, Long.class, filmId);
+        String strGenresIds = resultSet.getString("genre_id");
+        String strGenresNames = resultSet.getString("genre_name");
 
-        return new HashSet<>(resultList);
+        String strLikes = resultSet.getString("like_user_id");
+        Set<Long> usersIdsOfLikes = new TreeSet<>();
+        if (strLikes != null) {
+            String[] splitLikes = strLikes.split(",");
+            usersIdsOfLikes.addAll(Arrays.stream(splitLikes).map(Long::valueOf).collect(Collectors.toList()));
+        }
+
+        return Film.builder().id(resultSet.getLong("id")).name(resultSet.getString("name")).description(resultSet.getString("description")).releaseDate(resultSet.getDate("release_date").toLocalDate()).duration(resultSet.getInt("duration")).rate((Integer) resultSet.getObject("rate")).mpa(mapRowToMpa(resultSet, 0)).genres(getGenres(strGenresIds, strGenresNames)).likedUserIds(new TreeSet<>(usersIdsOfLikes)).build();
     }
 
-    private Set<Genre> findGenresByFilmId(Long filmId) {
-
-        String sql = FIND_GENRES_BY_FILM_ID;
-
+    private Set<Genre> getGenres(String strGenresIds, String strGenresNames) {
         Set<Genre> genres = new TreeSet<>(Comparator.comparing(Genre::getId));
 
-        genres.addAll(jdbcTemplate.query(sql, this::mapRowToGenre, filmId));
+        if (strGenresIds != null) {
+            String[] splitGenresIds = strGenresIds.split(",");
+            String[] splitGenresNames = strGenresNames.split(",");
+
+            for (int i = 0; i < splitGenresIds.length; i++) {
+                genres.add(Genre.builder().id(Long.valueOf(splitGenresIds[i])).name(splitGenresNames[i]).build());
+            }
+        }
 
         return genres;
     }
 
-    private Film getFilm(ResultSet resultSet, Map<Long, Film> filmMap) throws SQLException {
-
-        long id = resultSet.getLong("id");
-        Film film = filmMap.get(id);
-
-        if (film == null) {
-            film = mapRowToFilm(resultSet, 0);
-            film.setGenres(new TreeSet<>(Comparator.comparing(Genre::getId)));
-            film.setLikedUserIds(new HashSet<>());
-            filmMap.put(id, film);
-        }
-
-        Genre genre = mapRowToGenre(resultSet, 0);
-        if (genre.getId() != 0) {
-            film.getGenres().add(genre);
-        }
-
-        long userId = resultSet.getLong("user_id");
-        if (userId != 0) {
-            film.getLikedUserIds().add(userId);
-        }
-
-        return film;
-    }
-
-    private Film mapRowToFilm(ResultSet resultSet, int rowNum) throws SQLException {
-
-        return Film.builder()
-                .id(resultSet.getLong("id"))
-                .name(resultSet.getString("name"))
-                .description(resultSet.getString("description"))
-                .releaseDate(resultSet.getDate("release_date").toLocalDate())
-                .duration(resultSet.getInt("duration"))
-                .rate((Integer) resultSet.getObject("rate"))
-                .mpa(mapRowToMpa(resultSet, 0))
-                .build();
-    }
-
     private Mpa mapRowToMpa(ResultSet resultSet, int rowNum) throws SQLException {
 
-        return Mpa.builder()
-                .id(resultSet.getLong("mpa_id"))
-                .name(resultSet.getString("mpa_name"))
-                .build();
-    }
-
-    private Genre mapRowToGenre(ResultSet resultSet, int rowNum) throws SQLException {
-
-        return Genre.builder()
-                .id(resultSet.getLong("genre_id"))
-                .name(resultSet.getString("genre_name"))
-                .build();
+        return Mpa.builder().id(resultSet.getLong("mpa_id")).name(resultSet.getString("mpa_name")).build();
     }
 }

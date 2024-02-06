@@ -12,7 +12,6 @@ import ru.yandex.practicum.filmorate.response.ErrorResponse;
 
 import javax.validation.ConstraintViolationException;
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -28,37 +27,25 @@ public class ErrorHandler {
 
         log.warn("Exception: {}, Bad request: \n- {}", exception.getClass().getName(), exception.getMessage());
 
-        return ErrorResponse.builder()
-                .message(exception.getMessage())
-                .build();
+        return ErrorResponse.builder().message(exception.getMessage()).build();
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({ValidException.class, ConstraintViolationException.class})
     public ErrorResponse validateErrorException(final RuntimeException exception) {
 
-        log.warn("Exception: {}, Validation error(s): \n{}", exception.getClass().getName(),
-                Arrays.stream(exception.getMessage().split("&"))
-                        .map(message -> "- " + message.trim())
-                        .collect(Collectors.joining("\n")));
+        log.warn("Exception: {}, Validation error(s): \n{}", exception.getClass().getName(), Arrays.stream(exception.getMessage().split("&")).map(message -> "- " + message.trim()).collect(Collectors.joining("\n")));
 
-        return ErrorResponse.builder()
-                .message(exception.getMessage())
-                .build();
+        return ErrorResponse.builder().message(exception.getMessage()).build();
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(NotFoundException.class)
     public ErrorResponse notFoundException(final NotFoundException exception) {
 
-        log.warn("Exception: {}, Error(s): \n{}", exception.getClass().getName(),
-                Arrays.stream(exception.getMessage().split("&"))
-                        .map(message -> "- " + message.trim())
-                        .collect(Collectors.joining("\n")));
+        log.warn("Exception: {}, Error(s): \n{}", exception.getClass().getName(), Arrays.stream(exception.getMessage().split("&")).map(message -> "- " + message.trim()).collect(Collectors.joining("\n")));
 
-        return ErrorResponse.builder()
-                .message(exception.getMessage())
-                .build();
+        return ErrorResponse.builder().message(exception.getMessage()).build();
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -66,8 +53,6 @@ public class ErrorHandler {
     public ErrorResponse throwableException(final Exception exception) {
 
         log.error("Exception: {}", exception.toString());
-        return ErrorResponse.builder()
-                .message(exception.getMessage())
-                .build();
+        return ErrorResponse.builder().message(exception.getMessage()).build();
     }
 }
