@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.util.Set;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 public class User {
 
     private Long id;

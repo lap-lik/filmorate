@@ -21,7 +21,6 @@ import static ru.yandex.practicum.filmorate.constant.FilmConstant.COUNT_OF_POPUL
 public class FilmController {
     private final FilmService service;
 
-
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public FilmDTO createFilm(@RequestBody FilmDTO filmDTO) {
@@ -82,7 +81,8 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public List<FilmDTO> getPopularFilms(@Positive(message = "must be greater than 0.") @RequestParam(defaultValue = COUNT_OF_POPULAR_FILM) String count) {
+    public List<FilmDTO> getPopularFilms(@Positive(message = "must be greater than 0.")
+                                         @RequestParam(defaultValue = COUNT_OF_POPULAR_FILM) String count) {
 
         log.info("START endpoint `method:GET /films/popular` (get must popular films), " +
                 "count films: {}.", count);

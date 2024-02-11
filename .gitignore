@@ -46,4 +46,4 @@ build/
 db/*
 
 ### sql-data ###
-**/src/main/resources/sql_query.sql
+**/main/resources/test.sql

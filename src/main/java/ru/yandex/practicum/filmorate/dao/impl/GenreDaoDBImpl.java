@@ -1,11 +1,13 @@
 package ru.yandex.practicum.filmorate.dao.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dao.GenreDao;
+import ru.yandex.practicum.filmorate.exception.SQLDataAccessException;
 import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.sql.PreparedStatement;
@@ -20,10 +22,14 @@ import java.util.stream.Collectors;
 @Repository
 @RequiredArgsConstructor
 public class GenreDaoDBImpl implements GenreDao {
-    public static final String SAVE_GENRE = "INSERT INTO genres (name) VALUES (?)";
+    public static final String SAVE_GENRE = "INSERT INTO genres (name) " +
+            "VALUES (?)";
     public static final String FIND_GENRES = "SELECT * FROM genres";
-    public static final String UPDATE_GENRE = "UPDATE genres SET name = ? WHERE id = ?";
-    public static final String DELETE_GENRE_BY_ID = "DELETE FROM genres WHERE id = ?";
+    public static final String FIND_GENRES_BY_ID = FIND_GENRES + " WHERE id = ?";
+    public static final String UPDATE_GENRE = "UPDATE genres SET name = ? " +
+            "WHERE id = ?";
+    public static final String DELETE_GENRE_BY_ID = "DELETE FROM genres " +
+            "WHERE id = ?";
     public static final String IS_EXIST_GENRE_BY_ID = "SELECT EXISTS (SELECT 1 FROM genres WHERE id=?)";
 
     private final JdbcTemplate jdbcTemplate;
@@ -31,43 +37,46 @@ public class GenreDaoDBImpl implements GenreDao {
     @Override
     public Genre save(Genre genre) {
 
-        String sql = SAVE_GENRE;
         KeyHolder keyHolder = new GeneratedKeyHolder();
+        try {
+            jdbcTemplate.update(connection -> {
+                PreparedStatement stmt = connection.prepareStatement(SAVE_GENRE, new String[]{"id"});
+                stmt.setString(1, genre.getName());
+                return stmt;
+            }, keyHolder);
 
-        jdbcTemplate.update(connection -> {
-            PreparedStatement stmt = connection.prepareStatement(sql, new String[]{"id"});
-            stmt.setString(1, genre.getName());
-            return stmt;
-        }, keyHolder);
+            Long genreId = Objects.requireNonNull(keyHolder.getKey()).longValue();
 
-        Long genreId = Objects.requireNonNull(keyHolder.getKey()).longValue();
+            genre.setId(genreId);
 
-        genre.setId(genreId);
-
-        return genre;
+            return genre;
+        } catch (DataAccessException exception) {
+            throw new SQLDataAccessException("Error saving the genre in the DB.", exception);
+        }
     }
 
     @Override
     public Optional<Genre> update(Genre genre) {
 
         Long genreId = genre.getId();
-        String sql = UPDATE_GENRE;
+        try {
+            int rowsUpdated = jdbcTemplate.update(UPDATE_GENRE, genre.getName(), genreId);
 
-        int rowsUpdated = jdbcTemplate.update(sql, genre.getName(), genreId);
+            if (rowsUpdated == 0) {
+                return Optional.empty();
+            }
 
-        if (rowsUpdated == 0) {
-            return Optional.empty();
+            return Optional.of(genre);
+        } catch (
+                DataAccessException exception) {
+            throw new SQLDataAccessException("Error updating the genre in the DB.", exception);
         }
-
-        return Optional.of(genre);
     }
 
     @Override
     public Optional<Genre> findById(Long genreId) {
 
-        String sql = FIND_GENRES + " WHERE id = ?";
-
-        List<Genre> genres = jdbcTemplate.query(sql, this::mapRowToGenre, genreId);
+        List<Genre> genres = jdbcTemplate.query(FIND_GENRES_BY_ID, this::mapRowToGenre, genreId);
 
         return genres.stream().findFirst();
     }
@@ -75,9 +84,7 @@ public class GenreDaoDBImpl implements GenreDao {
     @Override
     public List<Genre> findAll() {
 
-        String sql = FIND_GENRES;
-
-        List<Genre> genres = jdbcTemplate.query(sql, this::mapRowToGenre);
+        List<Genre> genres = jdbcTemplate.query(FIND_GENRES, this::mapRowToGenre);
 
         return genres.stream()
                 .sorted(Comparator.comparing(Genre::getId))
@@ -87,9 +94,7 @@ public class GenreDaoDBImpl implements GenreDao {
     @Override
     public boolean deleteById(Long genreId) {
 
-        String sql = DELETE_GENRE_BY_ID;
-
-        int isFilmDelete = jdbcTemplate.update(sql, genreId);
+        int isFilmDelete = jdbcTemplate.update(DELETE_GENRE_BY_ID, genreId);
 
         return isFilmDelete > 0;
     }
@@ -97,9 +102,7 @@ public class GenreDaoDBImpl implements GenreDao {
     @Override
     public boolean isExistsById(Long genreId) {
 
-        String sql = IS_EXIST_GENRE_BY_ID;
-
-        return Boolean.TRUE.equals(jdbcTemplate.queryForObject(sql, Boolean.class, genreId));
+        return Boolean.TRUE.equals(jdbcTemplate.queryForObject(IS_EXIST_GENRE_BY_ID, Boolean.class, genreId));
     }
 
     private Genre mapRowToGenre(ResultSet resultSet, int rowNum) throws SQLException {

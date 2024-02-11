@@ -16,7 +16,6 @@ import java.util.List;
 public class UserController {
     private final UserService service;
 
-
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserDTO createUser(@RequestBody final UserDTO userDTO) {

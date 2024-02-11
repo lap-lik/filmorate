@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.util.Set;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 public class Film {
 
     private Long id;
@@ -15,7 +15,6 @@ public class Film {
     private String description;
     private LocalDate releaseDate;
     private Integer duration;
-    private Integer rate;
     private Mpa mpa;
     private Set<Long> likedUserIds;
     private Set<Genre> genres;

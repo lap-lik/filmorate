@@ -35,8 +35,6 @@ public class FilmDTO {
     @Positive(message = "The duration of the film should be positive.")
     private Integer duration;
 
-    private Integer rate;
-
     @NotNull(message = "The MPA rating of the film must not be empty.")
     private Mpa mpa;
 

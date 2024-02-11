@@ -5,8 +5,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import ru.yandex.practicum.filmorate.exception.BadRequestException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.SQLDataAccessException;
 import ru.yandex.practicum.filmorate.exception.ValidException;
 import ru.yandex.practicum.filmorate.response.ErrorResponse;
 
@@ -19,7 +21,7 @@ import java.util.stream.Collectors;
         UserController.class,
         GenreController.class,
         MpaController.class})
-public class ErrorHandler {
+public class ErrorHandler extends ResponseEntityExceptionHandler {
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(BadRequestException.class)
@@ -34,7 +36,10 @@ public class ErrorHandler {
     @ExceptionHandler({ValidException.class, ConstraintViolationException.class})
     public ErrorResponse validateErrorException(final RuntimeException exception) {
 
-        log.warn("Exception: {}, Validation error(s): \n{}", exception.getClass().getName(), Arrays.stream(exception.getMessage().split("&")).map(message -> "- " + message.trim()).collect(Collectors.joining("\n")));
+        log.warn("Exception: {}, Validation error(s): \n{}", exception.getClass().getName(),
+                Arrays.stream(exception.getMessage().split("&"))
+                        .map(message -> "- " + message.trim())
+                        .collect(Collectors.joining("\n")));
 
         return ErrorResponse.builder().message(exception.getMessage()).build();
     }
@@ -43,7 +48,10 @@ public class ErrorHandler {
     @ExceptionHandler(NotFoundException.class)
     public ErrorResponse notFoundException(final NotFoundException exception) {
 
-        log.warn("Exception: {}, Error(s): \n{}", exception.getClass().getName(), Arrays.stream(exception.getMessage().split("&")).map(message -> "- " + message.trim()).collect(Collectors.joining("\n")));
+        log.warn("Exception: {}, Error(s): \n{}", exception.getClass().getName(),
+                Arrays.stream(exception.getMessage().split("&"))
+                        .map(message -> "- " + message.trim())
+                        .collect(Collectors.joining("\n")));
 
         return ErrorResponse.builder().message(exception.getMessage()).build();
     }
@@ -54,5 +62,15 @@ public class ErrorHandler {
 
         log.error("Exception: {}", exception.toString());
         return ErrorResponse.builder().message(exception.getMessage()).build();
+    }
+
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(SQLDataAccessException.class)
+    public ErrorResponse handleException(SQLDataAccessException exception) {
+
+        log.warn("Exception: {}, Bad request: \n- {} \nStackTrace: \n- {}", exception.getClass().getName(),
+                exception.getMessage(), exception.getCause().getMessage());
+
+        return ErrorResponse.builder().message(exception.getMessage() + exception.getCause()).build();
     }
 }

@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class FilmTest {
-    public static final String INVALIDED_DESCRIPTION = "A".repeat(201);
     private Validator validator;
     private final FilmDTO filmDTO = FilmDTO.builder()
             .name("Star Wars. Episode I: The Phantom Menace")
@@ -51,7 +50,7 @@ class FilmTest {
     @DisplayName("A test to check the description of more than 200 characters.")
     void validateCreateFilmDescriptionMaxSize() {
 
-        filmDTO.setDescription(INVALIDED_DESCRIPTION);
+        filmDTO.setDescription("A".repeat(201));
 
         Set<ConstraintViolation<FilmDTO>> violations = validator.validate(filmDTO);
         String textFromValidation = getViolations(violations);
