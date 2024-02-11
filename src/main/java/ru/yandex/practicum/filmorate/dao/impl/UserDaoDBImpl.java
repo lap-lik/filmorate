@@ -25,28 +25,23 @@ public class UserDaoDBImpl implements UserDao {
             "(SELECT GROUP_CONCAT(CASE " +
             "WHEN f.user_1 = u.id THEN f.user_2 " +
             "WHEN f.user_2 = u.id AND f.friendship_status = TRUE THEN f.user_1 END SEPARATOR ',') " +
-            "FROM friendships f " +
-            "WHERE (f.user_1 = u.id OR f.user_2 = u.id)) AS friends_ids " +
+            "FROM friendships f) AS friends_ids " +
             "FROM users u";
     public static final String FIND_USER_BY_ID = FIND_USERS + " WHERE u.id = ?";
-    public static final String FIND_ALL_FRIENDS_BY_USER_ID = FIND_USERS + " WHERE u.id IN (SELECT user_1 " +
-            "FROM friendships " +
-            "WHERE user_2 = ? AND friendship_status = true " +
-            "UNION " +
-            "SELECT user_2 " +
-            "FROM friendships " +
-            "WHERE user_1 = ? )";
+    public static final String FIND_ALL_FRIENDS_BY_USER_ID = FIND_USERS + " WHERE u.id IN (SELECT (CASE " +
+            "WHEN f.user_1 = ? THEN f.user_2 " +
+            "WHEN f.user_2 = ? AND f.friendship_status = TRUE THEN f.user_1 END) " +
+            "FROM friendships f)";
     public static final String FIND_COMMON_FRIENDS = FIND_USERS + " WHERE u.id IN (SELECT * " +
-            "FROM (SELECT user_1 FROM friendships " +
-            "WHERE user_2 = ? AND friendship_status = true " +
-            "UNION " +
-            "SELECT user_2 FROM friendships " +
-            "WHERE user_1 = ?) " +
+            "FROM (SELECT (CASE " +
+            "WHEN f.user_1 = ? THEN f.user_2 " +
+            "WHEN f.user_2 = ? AND f.friendship_status = TRUE THEN f.user_1 END) " +
+            "FROM friendships f) " +
             "INTERSECT " +
-            "(SELECT user_1 FROM friendships  " +
-            "WHERE user_2 = ? AND friendship_status = true " +
-            "UNION " +
-            "SELECT user_2 FROM friendships WHERE user_1 = ?))";
+            "(SELECT (CASE " +
+            "WHEN f.user_1 = ? THEN f.user_2 " +
+            "WHEN f.user_2 = ? AND f.friendship_status = TRUE THEN f.user_1 END) " +
+            "FROM friendships f))";
     public static final String UPDATE_USER = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? " +
             "WHERE id = ?";
     public static final String DELETE_USER_BY_ID = "DELETE FROM users " +
