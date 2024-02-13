@@ -48,11 +48,11 @@ public class MpaDaoDBImpl implements MpaDao {
                 return stmt;
             }, keyHolder);
 
-        Long mpaId = Objects.requireNonNull(keyHolder.getKey()).longValue();
+            Long mpaId = Objects.requireNonNull(keyHolder.getKey()).longValue();
 
-        mpa.setId(mpaId);
+            mpa.setId(mpaId);
 
-        return mpa;
+            return mpa;
         } catch (
                 DataAccessException exception) {
             throw new SQLDataAccessException("Error saving the mpa in the DB.", exception);

@@ -71,7 +71,7 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
         return ErrorResponse.builder().message(exception.getMessage() + exception.getCause()).build();
     }
 
-    private String getExceptionMessage(Throwable exception){
+    private String getExceptionMessage(Throwable exception) {
 
         return Arrays.stream(exception.getMessage().split("&"))
                 .map(message -> "- " + message.trim())

@@ -104,12 +104,12 @@ public class FilmDaoDBImpl implements FilmDao {
                 return stmt;
             }, keyHolder);
 
-        Long filmId = Objects.requireNonNull(keyHolder.getKey()).longValue();
+            Long filmId = Objects.requireNonNull(keyHolder.getKey()).longValue();
 
-        film.setId(filmId);
-        addLinksFilmGenre(film);
+            film.setId(filmId);
+            addLinksFilmGenre(film);
 
-        return findById(filmId).orElse(null);
+            return findById(filmId).orElse(null);
         } catch (DataAccessException exception) {
             throw new SQLDataAccessException("Error saving the film in the DB.", exception);
         }
@@ -154,8 +154,8 @@ public class FilmDaoDBImpl implements FilmDao {
     @Override
     public boolean deleteById(Long filmId) {
 
-            int filmDeleted = jdbcTemplate.update(DELETE_FILM_BY_ID, filmId);
-            return filmDeleted > 0;
+        int filmDeleted = jdbcTemplate.update(DELETE_FILM_BY_ID, filmId);
+        return filmDeleted > 0;
     }
 
     @Override
