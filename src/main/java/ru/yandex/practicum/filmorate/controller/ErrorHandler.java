@@ -37,9 +37,7 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
     public ErrorResponse validateErrorException(final RuntimeException exception) {
 
         log.warn("Exception: {}, Validation error(s): \n{}", exception.getClass().getName(),
-                Arrays.stream(exception.getMessage().split("&"))
-                        .map(message -> "- " + message.trim())
-                        .collect(Collectors.joining("\n")));
+                getExceptionMessage(exception));
 
         return ErrorResponse.builder().message(exception.getMessage()).build();
     }
@@ -49,9 +47,7 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
     public ErrorResponse notFoundException(final NotFoundException exception) {
 
         log.warn("Exception: {}, Error(s): \n{}", exception.getClass().getName(),
-                Arrays.stream(exception.getMessage().split("&"))
-                        .map(message -> "- " + message.trim())
-                        .collect(Collectors.joining("\n")));
+                getExceptionMessage(exception));
 
         return ErrorResponse.builder().message(exception.getMessage()).build();
     }
@@ -61,6 +57,7 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
     public ErrorResponse throwableException(final Exception exception) {
 
         log.error("Exception: {}", exception.toString());
+
         return ErrorResponse.builder().message(exception.getMessage()).build();
     }
 
@@ -72,5 +69,12 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
                 exception.getMessage(), exception.getCause().getMessage());
 
         return ErrorResponse.builder().message(exception.getMessage() + exception.getCause()).build();
+    }
+
+    private String getExceptionMessage(Throwable exception){
+
+        return Arrays.stream(exception.getMessage().split("&"))
+                .map(message -> "- " + message.trim())
+                .collect(Collectors.joining("\n"));
     }
 }

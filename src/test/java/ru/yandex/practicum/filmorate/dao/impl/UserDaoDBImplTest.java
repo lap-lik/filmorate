@@ -13,6 +13,7 @@ import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,21 +22,56 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @JdbcTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-class UserDaoDBImplTest extends AbstractDaoTest {
+class UserDaoDBImplTest {
     private final JdbcTemplate jdbcTemplate;
     private UserDao userDao;
+    private User user1;
+    private User user2;
+    private User user3;
+    private User user4;
+    private User userUpdate;
 
     @BeforeEach
     void setUp() {
+
         userDao = new UserDaoDBImpl(jdbcTemplate);
+        user1 = User.builder()
+                .login("user-2")
+                .name("User-1 Name")
+                .email("mail@mail.ru")
+                .birthday(LocalDate.of(1984, 1, 4))
+                .build();
+        user2 = User.builder()
+                .login("user-2")
+                .name("User-2 Name")
+                .email("user-2@mail.ru")
+                .birthday(LocalDate.of(1983, 2, 3))
+                .build();
+        user3 = User.builder()
+                .login("user-3")
+                .name("User-3 Name")
+                .email("user-3@mail.ru")
+                .birthday(LocalDate.of(1982, 3, 2))
+                .build();
+        user4 = User.builder()
+                .login("user-4")
+                .name("User-4 Name")
+                .email("user-4@mail.ru")
+                .birthday(LocalDate.of(1981, 4, 1))
+                .build();
+        userUpdate = User.builder()
+                .id(1L)
+                .login("User-1-Update")
+                .name("User-1 Name-Update")
+                .email("user-1@mail.ru")
+                .friends(Set.of(2L))
+                .birthday(LocalDate.of(1985, 5, 5))
+                .build();
     }
 
 
     @Test
-    void save() {
-
-        // Подготавливаем данные для теста
-        setUpUsers();
+    void testSaveUserWithExpectedResultNotNull() {
 
         // вызываем тестируемый метод
         User result = userDao.save(user1);
@@ -49,10 +85,9 @@ class UserDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void save_Invalid_Email() {
+    void testSaveUserWithInvalidEmailResultException() {
 
         // Подготавливаем данные для теста
-        setUpUsers();
         user1.setEmail("mail mail.ru"); //устанавливаем не правильный email
 
         // вызываем тестируемый метод и проверяем утверждения
@@ -62,10 +97,9 @@ class UserDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void save_Login_With_Space() {
+    void testSaveUserWithInvalidLoginResultException() {
 
         // Подготавливаем данные для теста
-        setUpUsers();
         user1.setLogin("dol ore"); //устанавливаем логин с пробелом
 
         // вызываем тестируемый метод и проверяем утверждения
@@ -75,10 +109,9 @@ class UserDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void save_Invalid_Birthday() {
+    void testSaveUserWithInvalidBirthdayResultException() {
 
         // Подготавливаем данные для теста
-        setUpUsers();
         user1.setBirthday(LocalDate.of(2025, 1, 1)); //устанавливаем дату рождения в будущем
 
         // вызываем тестируемый метод и проверяем утверждения
@@ -88,10 +121,9 @@ class UserDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void findById() {
+    void testFindUserByIdWithExpectedResultNotNull() {
 
         // Подготавливаем данные для теста
-        setUpUsers();
         userDao.save(user1);
         userDao.save(user2);
 
@@ -107,10 +139,9 @@ class UserDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void findById_NotFound_Return_Null() {
+    void testFindUserByInvalidIdResultNull() {
 
         // Подготавливаем данные для теста
-        setUpUsers();
         userDao.save(user1);
         userDao.save(user2);
 
@@ -123,10 +154,9 @@ class UserDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void findAll() {
+    void testFindAllResultListOfUsers() {
 
         // Подготавливаем данные для теста
-        setUpUsers();
         userDao.save(user1);
         userDao.save(user2);
 
@@ -140,10 +170,9 @@ class UserDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void update() {
+    void testUpdateUserWithExpectedResultNotNull() {
 
         // Подготавливаем данные для теста
-        setUpUsers();
         userDao.save(user1);
         userDao.save(user2);
         userDao.addFriend(user1.getId(), user2.getId());
@@ -159,10 +188,9 @@ class UserDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void update_Invalid_Id() {
+    void testUpdateUserWithInvalidUserIdResultNull() {
 
         // вызываем тестируемый метод
-        setUpUsers();
         userDao.save(user1);
         userUpdate.setId(999L);
 
@@ -175,10 +203,9 @@ class UserDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void deleteById() {
+    void testDeleteByUserIdResultUserDeleted() {
 
         // Подготавливаем данные для теста
-        setUpUsers();
         userDao.save(user1);
         userDao.save(user2);
 
@@ -193,10 +220,9 @@ class UserDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void isExistsById() {
+    void testUserExistenceByIdResultTrue() {
 
         // Подготавливаем данные для теста
-        setUpUsers();
         userDao.save(user1);
         userDao.save(user2);
 
@@ -210,10 +236,9 @@ class UserDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void addFriend() {
+    void testAddingFriendWhitIdUserAndFriendResultTrue() {
 
         // Подготавливаем данные для теста
-        setUpUsers();
         userDao.save(user1);
         userDao.save(user2);
         Long user1Id = user1.getId();
@@ -242,10 +267,9 @@ class UserDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void findAllFriends() {
+    void testFindAllFriendsResultListOfUsers() {
 
         // Подготавливаем данные для теста
-        setUpUsers();
         userDao.save(user1);
         userDao.save(user2);
         userDao.save(user3);
@@ -273,10 +297,9 @@ class UserDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void findCommonFriends() {
+    void testFindCommonFriendsResultListOfUsers() {
 
         // Подготавливаем данные для теста
-        setUpUsers();
         userDao.save(user1);
         userDao.save(user2);
         userDao.save(user3);
@@ -306,10 +329,9 @@ class UserDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void deleteFriend() {
+    void testDeleteFriendByUserIdAndFriendIdResultDeletedLinkUserFriend() {
 
         // Подготавливаем данные для теста
-        setUpUsers();
         userDao.save(user1);
         userDao.save(user2);
         Long user1Id = user1.getId();

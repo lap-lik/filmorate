@@ -23,20 +23,34 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @Sql(scripts = "classpath:test_data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-class GenreDaoDBImplTest extends AbstractDaoTest {
+class GenreDaoDBImplTest {
     private final JdbcTemplate jdbcTemplate;
     private GenreDao genreDao;
+    private Genre genre1;
+    private Genre genre2;
+
+    private Genre genreUpdate;
 
     @BeforeEach
     void setUp() {
+
         genreDao = new GenreDaoDBImpl(jdbcTemplate);
+        genre1 = Genre.builder()
+                .id(1L)
+                .name("Комедия")
+                .build();
+        genre2 = Genre.builder()
+                .id(2L)
+                .name("Драма")
+                .build();
+        genreUpdate = Genre.builder()
+                .id(1L)
+                .name("Боевик")
+                .build();
     }
 
     @Test
-    void save() {
-
-        // Подготавливаем данные для теста
-        setUpGenres();
+    void testSaveGenreWithExpectedResultNotNull() {
 
         // вызываем тестируемый метод
         Genre result = genreDao.save(genre1);
@@ -49,10 +63,9 @@ class GenreDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void save_Empty_Name() {
+    void testSaveGenreWithEmptyNameResultException() {
 
         // Подготавливаем данные для теста
-        setUpGenres();
         genre1.setName(""); //устанавливаем пустое имя
 
         // вызываем тестируемый метод и проверяем утверждения
@@ -62,10 +75,9 @@ class GenreDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void update() {
+    void testUpdateGenreWithExpectedResultNotNull() {
 
         // Подготавливаем данные для теста
-        setUpGenres();
         genreDao.save(genre1);
 
         // вызываем тестируемый метод
@@ -79,10 +91,9 @@ class GenreDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void update_Invalid_Id() {
+    void testUpdateGenreWithInvalidGenreIdResultNull() {
 
         // Подготавливаем данные для теста
-        setUpGenres();
         genreDao.save(genre1);
         genreUpdate.setId(999L);
 
@@ -95,10 +106,9 @@ class GenreDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void findById() {
+    void testFindGenreByIdWithExpectedResultNotNull() {
 
         // Подготавливаем данные для теста
-        setUpGenres();
         genreDao.save(genre1);
         genreDao.save(genre2);
 
@@ -113,10 +123,9 @@ class GenreDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void findById_NotFound_Return_Null() {
+    void testFindGenreByInvalidIdResultNull() {
 
         // Подготавливаем данные для теста
-        setUpGenres();
         genreDao.save(genre1);
         genreDao.save(genre2);
 
@@ -129,10 +138,9 @@ class GenreDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void findAll() {
+    void testFindAllResultListOfGenres() {
 
         // Подготавливаем данные для теста
-        setUpGenres();
         genreDao.save(genre1);
         genreDao.save(genre2);
 
@@ -146,10 +154,9 @@ class GenreDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void deleteById() {
+    void testDeleteByGenreIdResultGenreDeleted() {
 
         // Подготавливаем данные для теста
-        setUpGenres();
         genreDao.save(genre1);
         genreDao.save(genre2);
 
@@ -164,10 +171,9 @@ class GenreDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void isExistsById() {
+    void testGenreExistenceByIdResultTrue() {
 
         // Подготавливаем данные для теста
-        setUpGenres();
         genreDao.save(genre1);
         genreDao.save(genre2);
 

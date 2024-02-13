@@ -11,9 +11,15 @@ import ru.yandex.practicum.filmorate.dao.FilmDao;
 import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.exception.SQLDataAccessException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,24 +28,88 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @JdbcTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-class FilmDaoDBImplTest extends AbstractDaoTest {
+class FilmDaoDBImplTest {
     private final JdbcTemplate jdbcTemplate;
     private FilmDao filmDao;
     private UserDao userDao;
+    protected Film film1;
+    protected Film film2;
+    protected Film filmUpdate;
+    protected Set<Genre> listGenreIds;
+    protected Set<Genre> listGenres;
+    protected Genre genre1;
+    protected Genre genreOnlyId1;
+    protected Genre genre2;
+    protected Genre genreOnlyId2;
+    protected User user1;
+    protected User user2;
 
     @BeforeEach
     void setUp() {
+
         filmDao = new FilmDaoDBImpl(jdbcTemplate);
         userDao = new UserDaoDBImpl(jdbcTemplate);
+        film1 = Film.builder()
+                .name("nisi eiusmod")
+                .description("adipisicing")
+                .releaseDate(LocalDate.of(1967, 3, 25))
+                .duration(100)
+                .mpa(Mpa.builder().id(1L).name("G").build())
+                .build();
+        film2 = Film.builder()
+                .name("New film")
+                .description("New film about friends")
+                .releaseDate(LocalDate.of(1999, 4, 30))
+                .duration(120)
+                .mpa(Mpa.builder().id(3L).name("PG-13").build())
+                .build();
+        filmUpdate = Film.builder()
+                .id(1L)
+                .name("Film Updated")
+                .description("New film update description")
+                .releaseDate(LocalDate.of(1989, 4, 17))
+                .duration(190)
+                .mpa(Mpa.builder().id(2L).name("PG").build())
+                .build();
+    }
+
+    void setUpUsers() {
+
+        user1 = User.builder()
+                .login("user-2")
+                .name("User-1 Name")
+                .email("mail@mail.ru")
+                .birthday(LocalDate.of(1984, 1, 4))
+                .build();
+        user2 = User.builder()
+                .login("user-2")
+                .name("User-2 Name")
+                .email("user-2@mail.ru")
+                .birthday(LocalDate.of(1983, 2, 3))
+                .build();
+    }
+
+    void setUpGenres() {
+
+        genre1 = Genre.builder()
+                .id(1L)
+                .name("Комедия")
+                .build();
+        genre2 = Genre.builder()
+                .id(2L)
+                .name("Драма")
+                .build();
+        genreOnlyId1 = Genre.builder().id(1L).build();
+        genreOnlyId2 = Genre.builder().id(2L).build();
+        listGenreIds = new TreeSet<>(Comparator.comparing(Genre::getId));
+        listGenres = new TreeSet<>(Comparator.comparing(Genre::getId));
     }
 
     @Test
-    void save() {
+    void testSaveFilmWithExpectedResultNotNull() {
 
         // Подготавливаем данные для теста
-        setUpFilms();
         setUpGenres();
-        setUpGenresOnlyIds();
         listGenreIds.add(genreOnlyId2);
         film1.setGenres(listGenreIds);
 
@@ -58,10 +128,9 @@ class FilmDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void save_Empty_Name() {
+    void testSaveFilmWithEmptyNameResultException() {
 
         // Подготавливаем данные для теста
-        setUpFilms();
         film1.setName(""); //устанавливаем пустое имя
 
         // вызываем тестируемый метод и проверяем утверждения
@@ -71,10 +140,9 @@ class FilmDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void save_More_Max_Size_Description() {
+    void testSaveFilmWithMoreMaxSizeDescriptionResultException() {
 
         // Подготавливаем данные для теста
-        setUpFilms();
         film1.setDescription("A".repeat(201)); //устанавливаем значение больше заданного
 
         // вызываем тестируемый метод и проверяем утверждения
@@ -84,10 +152,9 @@ class FilmDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void save_Invalid_ReleaseDate() {
+    void testSaveFilmWithInvalidReleaseDateResultException() {
 
         // Подготавливаем данные для теста
-        setUpFilms();
         film1.setReleaseDate(LocalDate.of(1800, 1, 1)); //устанавливаем неправильную дату
 
         // вызываем тестируемый метод и проверяем утверждения
@@ -97,10 +164,9 @@ class FilmDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void save_Negative_Duration() {
+    void testSaveFilmWithNegativeDurationResultException() {
 
         // Подготавливаем данные для теста
-        setUpFilms();
         film1.setDuration(-100);
 
         // вызываем тестируемый метод и проверяем утверждения
@@ -110,10 +176,9 @@ class FilmDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void findById() {
+    void testFindFilmByIdWithExpectedResultNotNull() {
 
         // Подготавливаем данные для теста
-        setUpFilms();
         filmDao.save(film1);
         filmDao.save(film2);
 
@@ -129,10 +194,9 @@ class FilmDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void findById_NotFound_Return_Null() {
+    void testFindFilmByInvalidIdResultNull() {
 
         // Подготавливаем данные для теста
-        setUpFilms();
         filmDao.save(film1);
         filmDao.save(film2);
 
@@ -145,10 +209,9 @@ class FilmDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void findAll() {
+    void testFindAllResultListOfFilms() {
 
         // Подготавливаем данные для теста
-        setUpFilms();
         filmDao.save(film1);
         filmDao.save(film2);
 
@@ -162,12 +225,10 @@ class FilmDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void update() {
+    void testUpdateFilmWithExpectedResultNotNull() {
 
         // Подготавливаем данные для теста
-        setUpFilms();
         setUpGenres();
-        setUpGenresOnlyIds();
         listGenreIds.add(genreOnlyId1);
         listGenreIds.add(genreOnlyId2);
         filmDao.save(film2);
@@ -188,10 +249,9 @@ class FilmDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void update_Invalid_Id() {
+    void testUpdateFilmWithInvalidFilmIdResultNull() {
 
         // вызываем тестируемый метод
-        setUpFilms();
         filmDao.save(film1);
         filmUpdate.setId(999L);
 
@@ -204,10 +264,9 @@ class FilmDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void deleteById() {
+    void testDeleteByFilmIdResultFilmDeleted() {
 
         // Подготавливаем данные для теста
-        setUpFilms();
         filmDao.save(film1);
         filmDao.save(film2);
 
@@ -222,10 +281,9 @@ class FilmDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void isExistsById() {
+    void testFilmExistenceByIdResultTrue() {
 
         // Подготавливаем данные для теста
-        setUpFilms();
         filmDao.save(film1);
         filmDao.save(film2);
 
@@ -239,10 +297,9 @@ class FilmDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void addLike() {
+    void testAddingLikeWhitIdFilmAndUserResultTrue() {
 
         // Подготавливаем данные для теста
-        setUpFilms();
         setUpUsers();
         filmDao.save(film1);
         userDao.save(user1);
@@ -265,10 +322,9 @@ class FilmDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void findPopularFilms() {
+    void testFindPopularFilmsWhitParameterCountOfExpectedFilmsResultListPopularFilms() {
 
         // Подготавливаем данные для теста
-        setUpFilms();
         setUpUsers();
         filmDao.save(film1);
         filmDao.save(film2);
@@ -295,10 +351,9 @@ class FilmDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void deleteLike() {
+    void testDeleteLikeWhitFilmIdAndUserIdResultDeletedLike() {
 
         // Подготавливаем данные для теста
-        setUpFilms();
         setUpUsers();
         filmDao.save(film1);
         userDao.save(user1);

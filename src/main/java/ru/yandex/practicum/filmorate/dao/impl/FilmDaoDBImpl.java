@@ -26,54 +26,66 @@ import java.util.stream.Collectors;
 public class FilmDaoDBImpl implements FilmDao {
     public static final String SAVE_FILM = "INSERT INTO films (name, description, release_date, duration, mpa_id) " +
             "VALUES (?, ?, ?, ?, ?)";
-    public static final String FIND_FILMS = "SELECT f.*, " +
-            "m.name AS mpa_name, " +
-            "(SELECT GROUP_CONCAT(genre_id) " +
-            "FROM film_genre AS fg " +
-            "WHERE fg.film_id = f.id) AS genre_ids, " +
-            "(SELECT GROUP_CONCAT(name) " +
-            "FROM genres AS g " +
-            "WHERE g.id IN (SELECT fg.genre_id " +
-            "FROM film_genre AS fg " +
-            "WHERE fg.film_id = f.id " +
-            "ORDER BY fg.genre_id)) AS genre_names, " +
-            "(SELECT GROUP_CONCAT(l.user_id) " +
-            "FROM likes AS l " +
-            "WHERE (l.film_id = f.id)) AS like_user_ids " +
-            "FROM films f " +
-            "LEFT OUTER JOIN mpa AS m ON f.mpa_id = m.id";
+    public static final String FIND_FILMS = "SELECT f.*," +
+            "       m.name                                                                        AS mpa_name," +
+            "       (SELECT GROUP_CONCAT(genre_id) FROM film_genre AS fg WHERE fg.film_id = f.id) AS genre_ids," +
+            "       (SELECT GROUP_CONCAT(name)" +
+            "        FROM genres AS g" +
+            "        WHERE g.id IN (SELECT fg.genre_id" +
+            "                       FROM film_genre AS fg" +
+            "                       WHERE fg.film_id = f.id" +
+            "                       ORDER BY fg.genre_id))                                        AS genre_names," +
+            "       (SELECT GROUP_CONCAT(l.user_id)" +
+            "        FROM likes AS l" +
+            "        WHERE (l.film_id = f.id))                                                    AS like_user_ids " +
+            "FROM films f" +
+            "         LEFT OUTER JOIN mpa AS m ON f.mpa_id = m.id";
     public static final String FIND_POPULAR_FILMS = FIND_FILMS + " WHERE f.id IN (" +
-            "SELECT * " +
-            "FROM (SELECT l.film_id " +
-            "FROM likes AS l " +
-            "GROUP BY l.film_id " +
-            "ORDER BY COUNT(l.user_id) DESC " +
-            "LIMIT ?) " +
-            "UNION " +
-            "(SELECT f.id " +
-            "FROM films AS f " +
-            "WHERE f.id NOT IN (SELECT l.film_id " +
-            "FROM likes AS l " +
-            "GROUP BY l.film_id " +
-            "ORDER BY COUNT(l.user_id) DESC LIMIT ?) " +
-            "LIMIT ? - (SELECT COUNT(*) " +
-            "FROM (SELECT l.film_id " +
-            "FROM likes AS l " +
-            "GROUP BY l.film_id " +
-            "ORDER BY COUNT(l.user_id) DESC LIMIT ?))) " +
-            "limit ?)";
+            "    SELECT *" +
+            "    FROM (SELECT l.film_id" +
+            "          FROM likes AS l" +
+            "          GROUP BY l.film_id" +
+            "          ORDER BY COUNT(l.user_id) DESC" +
+            "          LIMIT ?)" +
+            "    UNION" +
+            "    (SELECT f.id" +
+            "     FROM films AS f" +
+            "     WHERE f.id NOT IN (SELECT l.film_id" +
+            "                        FROM likes AS l" +
+            "                        GROUP BY l.film_id" +
+            "                        ORDER BY COUNT(l.user_id) DESC" +
+            "                        LIMIT ?)" +
+            "     LIMIT ? - (SELECT COUNT(*)" +
+            "                FROM (SELECT l.film_id" +
+            "                      FROM likes AS l" +
+            "                      GROUP BY l.film_id" +
+            "                      ORDER BY COUNT(l.user_id) DESC" +
+            "                      LIMIT ?)))" +
+            "    limit ?)";
     public static final String FIND_FILM_BY_ID = FIND_FILMS +
             " WHERE f.id = ?";
     public static final String UPDATE_FILM = "UPDATE films " +
-            "SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ? " +
+            "SET name         = ?," +
+            "    description  = ?," +
+            "    release_date = ?," +
+            "    duration     = ?," +
+            "    mpa_id       = ? " +
+            "WHERE id = ?;";
+    public static final String DELETE_FILM_BY_ID = "DELETE " +
+            "FROM films " +
             "WHERE id = ?";
-    public static final String DELETE_FILM_BY_ID = "DELETE FROM films WHERE id = ?";
-    public static final String IS_EXIST_FILM_BY_ID = "SELECT EXISTS (SELECT 1 FROM films WHERE id=?)";
+    public static final String IS_EXIST_FILM_BY_ID = "SELECT EXISTS (SELECT 1 FROM films WHERE id = ?)";
     public static final String ADD_LIKE = "INSERT INTO likes (film_id, user_id) " +
             "VALUES (?, ?)";
-    public static final String DELETE_LIKE = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
-    public static final String ADD_LINKS_FILM_GENRE = "INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)";
-    public static final String DELETE_LINKS_FILM_GENRE = "DELETE FROM film_genre WHERE film_id = ?";
+    public static final String DELETE_LIKE = "DELETE " +
+            "FROM likes " +
+            "WHERE film_id = ? " +
+            "  AND user_id = ?";
+    public static final String ADD_LINKS_FILM_GENRE = "INSERT INTO film_genre (film_id, genre_id) " +
+            "VALUES (?, ?)";
+    public static final String DELETE_LINKS_FILM_GENRE = "DELETE " +
+            "FROM film_genre " +
+            "WHERE film_id = ?";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -142,8 +154,8 @@ public class FilmDaoDBImpl implements FilmDao {
     @Override
     public boolean deleteById(Long filmId) {
 
-            int isFilmDelete = jdbcTemplate.update(DELETE_FILM_BY_ID, filmId);
-            return isFilmDelete > 0;
+            int filmDeleted = jdbcTemplate.update(DELETE_FILM_BY_ID, filmId);
+            return filmDeleted > 0;
     }
 
     @Override
@@ -176,9 +188,9 @@ public class FilmDaoDBImpl implements FilmDao {
     @Override
     public boolean deleteLike(Long filmId, Long userId) {
 
-        int isLikeDeleted = jdbcTemplate.update(DELETE_LIKE, filmId, userId);
+        int likeDeleted = jdbcTemplate.update(DELETE_LIKE, filmId, userId);
 
-        return isLikeDeleted > 0;
+        return likeDeleted > 0;
     }
 
     private void addLinksFilmGenre(Film film) {

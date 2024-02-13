@@ -22,20 +22,33 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @Sql(scripts = "classpath:test_data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-class MpaDaoDBImplTest extends AbstractDaoTest {
+class MpaDaoDBImplTest {
     private final JdbcTemplate jdbcTemplate;
     private MpaDao mpaDao;
+    private Mpa mpa1;
+    private Mpa mpa2;
+    private Mpa mpaUpdate;
 
     @BeforeEach
     void setUp() {
+
         mpaDao = new MpaDaoDBImpl(jdbcTemplate);
+        mpa1 = Mpa.builder()
+                .id(1L)
+                .name("G")
+                .build();
+        mpa2 = Mpa.builder()
+                .id(2L)
+                .name("PG")
+                .build();
+        mpaUpdate = Mpa.builder()
+                .id(1L)
+                .name("PG-13")
+                .build();
     }
 
     @Test
-    void save() {
-
-        // Подготавливаем данные для теста
-        setUpMpa();
+    void testSaveMpaWithExpectedResultNotNull() {
 
         // вызываем тестируемый метод
         Mpa result = mpaDao.save(mpa1);
@@ -48,10 +61,9 @@ class MpaDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void save_Empty_Name() {
+    void testSaveMpaWithEmptyNameResultException() {
 
         // Подготавливаем данные для теста
-        setUpMpa();
         mpa1.setName(""); //устанавливаем пустое имя
 
         // вызываем тестируемый метод и проверяем утверждения
@@ -61,10 +73,9 @@ class MpaDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void update() {
+    void testUpdateMpaWithExpectedResultNotNull() {
 
         // Подготавливаем данные для теста
-        setUpMpa();
         mpaDao.save(mpa1);
 
         // вызываем тестируемый метод
@@ -78,10 +89,9 @@ class MpaDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void update_Invalid_Id() {
+    void testUpdateMpaWithInvalidMpaIdResultNull() {
 
         // Подготавливаем данные для теста
-        setUpMpa();
         mpaDao.save(mpa1);
         mpaUpdate.setId(999L);
 
@@ -94,10 +104,9 @@ class MpaDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void findById() {
+    void testFindMpaByIdWithExpectedResultNotNull() {
 
         // Подготавливаем данные для теста
-        setUpMpa();
         mpaDao.save(mpa1);
         mpaDao.save(mpa2);
 
@@ -112,10 +121,9 @@ class MpaDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void findById_NotFound_Return_Null() {
+    void testFindMpaByInvalidIdResultNull() {
 
         // Подготавливаем данные для теста
-        setUpMpa();
         mpaDao.save(mpa1);
         mpaDao.save(mpa2);
 
@@ -128,10 +136,9 @@ class MpaDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void findAll() {
+    void testFindAllResultListOfMpaRatings() {
 
         // Подготавливаем данные для теста
-        setUpMpa();
         mpaDao.save(mpa1);
         mpaDao.save(mpa2);
 
@@ -145,10 +152,9 @@ class MpaDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void deleteById() {
+    void testDeleteByMpaIdResultMpaDeleted() {
 
         // Подготавливаем данные для теста
-        setUpMpa();
         mpaDao.save(mpa1);
         mpaDao.save(mpa2);
 
@@ -163,10 +169,9 @@ class MpaDaoDBImplTest extends AbstractDaoTest {
     }
 
     @Test
-    void isExistsById() {
+    void testMpaExistenceByIdResultTrue() {
 
         // Подготавливаем данные для теста
-        setUpMpa();
         mpaDao.save(mpa1);
         mpaDao.save(mpa2);
 

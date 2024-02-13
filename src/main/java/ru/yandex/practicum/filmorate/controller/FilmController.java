@@ -25,41 +25,33 @@ public class FilmController {
     @ResponseStatus(HttpStatus.CREATED)
     public FilmDTO createFilm(@RequestBody FilmDTO filmDTO) {
 
-        log.info("START endpoint `method:POST /films` (create film), request: {}.", filmDTO);
-        FilmDTO response = service.create(filmDTO);
-        log.info("END endpoint `method:POST /films` (create film), response: {}.", response);
+        log.info("START endpoint `method:POST /films` (create film), request: {}.", filmDTO.getName());
 
-        return response;
+        return service.create(filmDTO);
     }
 
     @GetMapping("/{id}")
     public FilmDTO getFilmById(@PathVariable Long id) {
 
         log.info("START endpoint `method:GET /films/{id}` (get film by id), film id: {}.", id);
-        FilmDTO response = service.getById(id);
-        log.info("END endpoint `method:GET /films/{id}` (get film by id), response: {}.", response);
 
-        return response;
+        return service.getById(id);
     }
 
     @GetMapping
     public List<FilmDTO> getAllFilms() {
 
         log.info("START endpoint `method:GET /films` (get all films).");
-        List<FilmDTO> response = service.getAll();
-        log.info("END endpoint `method:GET /films` (get all films), response-size: {}.", response.size());
 
-        return response;
+        return service.getAll();
     }
 
     @PutMapping
     public FilmDTO updateFilm(@RequestBody FilmDTO filmDTO) {
 
-        log.info("START endpoint `method:PUT /films` (update film), request: {}.", filmDTO);
-        FilmDTO response = service.update(filmDTO);
-        log.info("END endpoint `method:PUT /films` (update film), response: {}.", response);
+        log.info("START endpoint `method:PUT /films` (update film), request: {}.", filmDTO.getName());
 
-        return response;
+        return service.update(filmDTO);
     }
 
     @DeleteMapping("/{id}")
@@ -68,7 +60,6 @@ public class FilmController {
 
         log.info("START endpoint `method:DELETE /films/{id}` (delete film by id), film id: {}.", id);
         service.deleteById(id);
-        log.info("END endpoint `method:DELETE /films/{id}` (delete film by id), response: HttpStatus.NO_CONTENT.");
     }
 
     @PutMapping("/{id}/like/{userId}")
@@ -77,7 +68,6 @@ public class FilmController {
         log.info("START endpoint `method:PUT /films/{id}/like/{userId}` (add like to film), " +
                 "film id: {}, user id: {}.", id, userId);
         service.likeFilm(id, userId);
-        log.info("END endpoint `method:PUT /films/{id}/like/{userId}` (add like to film), response: HttpStatus.OK.");
     }
 
     @GetMapping("/popular")
@@ -86,10 +76,8 @@ public class FilmController {
 
         log.info("START endpoint `method:GET /films/popular` (get must popular films), " +
                 "count films: {}.", count);
-        List<FilmDTO> response = service.getPopularFilms(count);
-        log.info("END endpoint `method:GET /films/popular` (get must popular films), response-size: {}.", response.size());
 
-        return response;
+        return service.getPopularFilms(count);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
@@ -99,6 +87,5 @@ public class FilmController {
         log.info("START endpoint `method:DELETE /films/{id}/like/{userId}` (delete like from film), " +
                 "film id: {}, user id: {}.", id, userId);
         service.deleteLike(id, userId);
-        log.info("END endpoint `method:DELETE /films/{id}/like/{userId}` (delete like from film) response: HttpStatus.NO_CONTENT.");
     }
 }

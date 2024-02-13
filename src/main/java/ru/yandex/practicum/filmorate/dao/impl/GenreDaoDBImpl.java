@@ -24,13 +24,16 @@ import java.util.stream.Collectors;
 public class GenreDaoDBImpl implements GenreDao {
     public static final String SAVE_GENRE = "INSERT INTO genres (name) " +
             "VALUES (?)";
-    public static final String FIND_GENRES = "SELECT * FROM genres";
+    public static final String FIND_GENRES = "SELECT * " +
+            "FROM genres";
     public static final String FIND_GENRES_BY_ID = FIND_GENRES + " WHERE id = ?";
-    public static final String UPDATE_GENRE = "UPDATE genres SET name = ? " +
+    public static final String UPDATE_GENRE = "UPDATE genres " +
+            "SET name = ? " +
             "WHERE id = ?";
-    public static final String DELETE_GENRE_BY_ID = "DELETE FROM genres " +
+    public static final String DELETE_GENRE_BY_ID = "DELETE " +
+            "FROM genres " +
             "WHERE id = ?";
-    public static final String IS_EXIST_GENRE_BY_ID = "SELECT EXISTS (SELECT 1 FROM genres WHERE id=?)";
+    public static final String IS_EXIST_GENRE_BY_ID = "SELECT EXISTS (SELECT 1 FROM genres WHERE id = ?)";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -94,9 +97,9 @@ public class GenreDaoDBImpl implements GenreDao {
     @Override
     public boolean deleteById(Long genreId) {
 
-        int isFilmDelete = jdbcTemplate.update(DELETE_GENRE_BY_ID, genreId);
+        int genreDeleted = jdbcTemplate.update(DELETE_GENRE_BY_ID, genreId);
 
-        return isFilmDelete > 0;
+        return genreDeleted > 0;
     }
 
     @Override

@@ -21,41 +21,33 @@ public class MpaController {
     @ResponseStatus(HttpStatus.CREATED)
     public MpaDTO createMpa(@RequestBody MpaDTO mpaDTO) {
 
-        log.info("START endpoint `method:POST /mpa` (create MPA rating), request: {}.", mpaDTO);
-        MpaDTO response = service.create(mpaDTO);
-        log.info("END endpoint `method:POST /mpa` (create MPA rating), response: {}.", response);
+        log.info("START endpoint `method:POST /mpa` (create MPA rating), request: {}.", mpaDTO.getName());
 
-        return response;
+        return service.create(mpaDTO);
     }
 
     @GetMapping("/{id}")
     public MpaDTO getMpaById(@PathVariable Long id) {
 
         log.info("START endpoint `method:GET /mpa/{id}` (get MPA rating by id), MPA rating id: {}.", id);
-        MpaDTO response = service.getById(id);
-        log.info("END endpoint `method:GET /mpa/{id}` (get MPA rating by id), response: {}.", response);
 
-        return response;
+        return service.getById(id);
     }
 
     @GetMapping
     public List<MpaDTO> getAllMpaRatings() {
 
         log.info("START endpoint `method:GET /mpa` (get all MPA ratings).");
-        List<MpaDTO> response = service.getAll();
-        log.info("END endpoint `method:GET /mpa` (get all MPA ratings), response-size: {}.", response.size());
 
-        return response;
+        return service.getAll();
     }
 
     @PutMapping
     public MpaDTO updateMpa(@RequestBody MpaDTO mpaDTO) {
 
-        log.info("START endpoint `method:PUT /mpa` (update MPA rating), request: {}.", mpaDTO);
-        MpaDTO response = service.update(mpaDTO);
-        log.info("END endpoint `method:PUT /mpa` (update MPA rating), response: {}.", response);
+        log.info("START endpoint `method:PUT /mpa` (update MPA rating), request: {}.", mpaDTO.getName());
 
-        return response;
+        return service.update(mpaDTO);
     }
 
     @DeleteMapping("/{id}")
@@ -64,7 +56,5 @@ public class MpaController {
 
         log.info("START endpoint `method:DELETE /mpa/{id}` (delete MPA rating by id), MPA rating id: {}.", id);
         service.deleteById(id);
-        log.info("END endpoint `method:DELETE /mpa/{id}` (delete MPA rating by id), response: HttpStatus.NO_CONTENT.");
     }
-
 }

@@ -20,41 +20,33 @@ public class GenreController {
     @ResponseStatus(HttpStatus.CREATED)
     public GenreDTO createGenre(@RequestBody GenreDTO genreDTO) {
 
-        log.info("START endpoint `method:POST /genres` (create genre), request: {}.", genreDTO);
-        GenreDTO response = service.create(genreDTO);
-        log.info("END endpoint `method:POST /genres` (create genre), response: {}.", response);
+        log.info("START endpoint `method:POST /genres` (create genre), request: {}.", genreDTO.getName());
 
-        return response;
+        return service.create(genreDTO);
     }
 
     @GetMapping("/{id}")
     public GenreDTO getGenreById(@PathVariable Long id) {
 
         log.info("START endpoint `method:GET /genres/{id}` (get genre by id), genre id: {}.", id);
-        GenreDTO response = service.getById(id);
-        log.info("END endpoint `method:GET /genres/{id}` (get genre by id), response: {}.", response);
 
-        return response;
+        return service.getById(id);
     }
 
     @GetMapping
     public List<GenreDTO> getAllGenres() {
 
         log.info("START endpoint `method:GET /genres` (get all genres).");
-        List<GenreDTO> response = service.getAll();
-        log.info("END endpoint `method:GET /genres` (get all genres), response-size: {}.", response.size());
 
-        return response;
+        return service.getAll();
     }
 
     @PutMapping
     public GenreDTO updateGenre(@RequestBody GenreDTO genreDTO) {
 
-        log.info("START endpoint `method:PUT /genres` (update genre), request: {}.", genreDTO);
-        GenreDTO response = service.update(genreDTO);
-        log.info("END endpoint `method:PUT /genres` (update genre), response: {}.", response);
+        log.info("START endpoint `method:PUT /genres` (update genre), request: {}.", genreDTO.getName());
 
-        return response;
+        return service.update(genreDTO);
     }
 
     @DeleteMapping("/{id}")
@@ -63,7 +55,5 @@ public class GenreController {
 
         log.info("START endpoint `method:DELETE /genres/{id}` (delete genre by id), genre id: {}.", id);
         service.deleteById(id);
-        log.info("END endpoint `method:DELETE /genres/{id}` (delete genre by id), response: HttpStatus.NO_CONTENT.");
     }
-
 }

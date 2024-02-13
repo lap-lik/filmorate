@@ -24,14 +24,16 @@ import java.util.stream.Collectors;
 public class MpaDaoDBImpl implements MpaDao {
     public static final String SAVE_MPA = "INSERT INTO mpa (name) " +
             "VALUES (?)";
-    public static final String FIND_MPA_RATINGS = "SELECT * FROM mpa";
-
+    public static final String FIND_MPA_RATINGS = "SELECT * " +
+            "FROM mpa";
     public static final String FIND_MPA_RATINGS_BY_ID = FIND_MPA_RATINGS + " WHERE id = ?";
-    public static final String UPDATE_MPA = "UPDATE mpa SET name = ? " +
+    public static final String UPDATE_MPA = "UPDATE mpa " +
+            "SET name = ? " +
             "WHERE id = ?";
-    public static final String DELETE_MPA_BY_ID = "DELETE FROM mpa " +
+    public static final String DELETE_MPA_BY_ID = "DELETE " +
+            "FROM mpa " +
             "WHERE id = ?";
-    public static final String IS_EXIST_MPA_BY_ID = "SELECT EXISTS (SELECT 1 FROM mpa WHERE id=?)";
+    public static final String IS_EXIST_MPA_BY_ID = "SELECT EXISTS (SELECT 1 FROM mpa WHERE id = ?)";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -96,9 +98,9 @@ public class MpaDaoDBImpl implements MpaDao {
     @Override
     public boolean deleteById(Long mpaId) {
 
-        int isFilmDelete = jdbcTemplate.update(DELETE_MPA_BY_ID, mpaId);
+        int mpaDeleted = jdbcTemplate.update(DELETE_MPA_BY_ID, mpaId);
 
-        return isFilmDelete > 0;
+        return mpaDeleted > 0;
     }
 
     @Override

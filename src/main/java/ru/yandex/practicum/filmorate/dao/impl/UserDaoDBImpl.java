@@ -20,41 +20,50 @@ import java.util.stream.Collectors;
 @Repository(value = "userDB")
 @RequiredArgsConstructor
 public class UserDaoDBImpl implements UserDao {
-    public static final String SAVE_USER = "INSERT INTO users (email, login, name, birthday) VALUES (?, ?, ?, ?)";
-    public static final String FIND_USERS = "SELECT u.*, " +
-            "(SELECT GROUP_CONCAT(CASE " +
-            "WHEN f.user_1 = u.id THEN f.user_2 " +
-            "WHEN f.user_2 = u.id AND f.friendship_status = TRUE THEN f.user_1 END SEPARATOR ',') " +
-            "FROM friendships f) AS friends_ids " +
+    public static final String SAVE_USER = "INSERT INTO users (email, login, name, birthday) " +
+            "VALUES (?, ?, ?, ?)";
+    public static final String FIND_USERS = "SELECT u.*," +
+            "       (SELECT GROUP_CONCAT(CASE" +
+            "                                WHEN f.user_1 = u.id THEN f.user_2" +
+            "                                WHEN f.user_2 = u.id AND f.friendship_status = TRUE THEN f.user_1 END SEPARATOR ',')" +
+            "        FROM friendships f) AS friends_ids " +
             "FROM users u";
     public static final String FIND_USER_BY_ID = FIND_USERS + " WHERE u.id = ?";
-    public static final String FIND_ALL_FRIENDS_BY_USER_ID = FIND_USERS + " WHERE u.id IN (SELECT (CASE " +
-            "WHEN f.user_1 = ? THEN f.user_2 " +
-            "WHEN f.user_2 = ? AND f.friendship_status = TRUE THEN f.user_1 END) " +
-            "FROM friendships f)";
-    public static final String FIND_COMMON_FRIENDS = FIND_USERS + " WHERE u.id IN (SELECT * " +
-            "FROM (SELECT (CASE " +
-            "WHEN f.user_1 = ? THEN f.user_2 " +
-            "WHEN f.user_2 = ? AND f.friendship_status = TRUE THEN f.user_1 END) " +
-            "FROM friendships f) " +
-            "INTERSECT " +
-            "(SELECT (CASE " +
-            "WHEN f.user_1 = ? THEN f.user_2 " +
-            "WHEN f.user_2 = ? AND f.friendship_status = TRUE THEN f.user_1 END) " +
-            "FROM friendships f))";
-    public static final String UPDATE_USER = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? " +
+    public static final String FIND_ALL_FRIENDS_BY_USER_ID = FIND_USERS + " WHERE u.id IN (SELECT (CASE" +
+            "                           WHEN f.user_1 = ? THEN f.user_2" +
+            "                           WHEN f.user_2 = ? AND f.friendship_status = TRUE THEN f.user_1 END)" +
+            "               FROM friendships f)";
+    public static final String FIND_COMMON_FRIENDS = FIND_USERS + " WHERE u.id IN (SELECT *" +
+            "               FROM (SELECT (CASE" +
+            "                                 WHEN f.user_1 = ? THEN f.user_2" +
+            "                                 WHEN f.user_2 = ? AND f.friendship_status = TRUE THEN f.user_1 END)" +
+            "                     FROM friendships f)" +
+            "               INTERSECT" +
+            "               (SELECT (CASE" +
+            "                            WHEN f.user_1 = ? THEN f.user_2" +
+            "                            WHEN f.user_2 = ? AND f.friendship_status = TRUE THEN f.user_1 END)" +
+            "                FROM friendships f))";
+    public static final String UPDATE_USER = "UPDATE users " +
+            "SET email    = ?," +
+            "    login    = ?," +
+            "    name     = ?," +
+            "    birthday = ? " +
             "WHERE id = ?";
-    public static final String DELETE_USER_BY_ID = "DELETE FROM users " +
+    public static final String DELETE_USER_BY_ID = "DELETE " +
+            "FROM users " +
             "WHERE id = ?";
-    public static final String IS_EXIST_USER_BY_ID = "SELECT EXISTS (SELECT 1 FROM users WHERE id=?)";
+    public static final String IS_EXIST_USER_BY_ID = "SELECT EXISTS (SELECT 1 FROM users WHERE id = ?)";
     public static final String ADD_FRIEND = "INSERT INTO friendships (user_1, user_2) " +
-            "SELECT ?, ? FROM DUAL " +
-            "WHERE NOT EXISTS (" +
-            "SELECT 1 " +
+            "SELECT ?, ? " +
+            "FROM DUAL " +
+            "WHERE NOT EXISTS (SELECT 1 " +
+            "                  FROM friendships\n" +
+            "                  WHERE (user_1 = ? AND user_2 = ?) " +
+            "                     OR (user_1 = ? AND user_2 = ?))";
+    public static final String DELETE_FRIEND = "DELETE " +
             "FROM friendships " +
-            "WHERE (user_1 = ? AND user_2 = ?) OR (user_1 = ? AND user_2 = ?))";
-    public static final String DELETE_FRIEND = "DELETE FROM friendships " +
-            "WHERE (user_1 = ? AND user_2 = ?) OR (user_1 = ? AND user_2 = ?)";
+            "WHERE (user_1 = ? AND user_2 = ?) " +
+            "   OR (user_1 = ? AND user_2 = ?)";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -123,9 +132,9 @@ public class UserDaoDBImpl implements UserDao {
     @Override
     public boolean deleteById(Long userId) {
 
-        int isUserDelete = jdbcTemplate.update(DELETE_USER_BY_ID, userId);
+        int userDeleted = jdbcTemplate.update(DELETE_USER_BY_ID, userId);
 
-        return isUserDelete > 0;
+        return userDeleted > 0;
     }
 
     @Override
@@ -165,17 +174,17 @@ public class UserDaoDBImpl implements UserDao {
     @Override
     public boolean deleteFriend(Long userId, Long friendId) {
 
-        int isFriendDeleted = jdbcTemplate.update(DELETE_FRIEND, userId, friendId, friendId, userId);
+        int friendDeleted = jdbcTemplate.update(DELETE_FRIEND, userId, friendId, friendId, userId);
 
-        return isFriendDeleted > 0;
+        return friendDeleted > 0;
     }
 
     private User mapRowToUser(ResultSet resultSet, int rowNum) throws SQLException {
 
-        String str = resultSet.getString("friends_ids");
+        String arrayIds = resultSet.getString("friends_ids");
         Set<Long> ids = new TreeSet<>();
-        if (str != null) {
-            String[] split = str.split(",");
+        if (arrayIds != null) {
+            String[] split = arrayIds.split(",");
             ids.addAll(Arrays.stream(split).map(Long::valueOf).collect(Collectors.toList()));
         }
 
