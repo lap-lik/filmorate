@@ -7,4 +7,5 @@ public class FilmConstant {
 
     public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     public static final String COUNT_OF_POPULAR_FILM = "10";
+    public static final String FILM_DAO_IMPL = "filmDB";
 }

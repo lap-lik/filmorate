@@ -1,7 +1,9 @@
 package ru.yandex.practicum.filmorate.model;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.dto.UserDTO;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -15,11 +17,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class UserTest {
     private Validator validator;
-    private final User user = User.builder()
-            .email("mail@mail.ru")
-            .login("dolore")
-            .name("Nick Name")
-            .birthday(LocalDate.of(1946, 8, 20))
+    private final UserDTO userDTO = UserDTO.builder()
+            .email("DarthVader@jedi.com")
+            .login("DarthVader")
+            .name("Anakin Skywalker")
+            .birthday(LocalDate.of(2000, 1, 1))
             .build();
 
     @BeforeEach
@@ -30,50 +32,74 @@ class UserTest {
     }
 
     @Test
+    @DisplayName("A test to check an empty email.")
     void validateUserEmailEmpty() {
-        user.setEmail("");
 
-        Set<ConstraintViolation<User>> violations = validator.validate(user);
-        String textFromValidation = violations.stream()
-                .map(ConstraintViolation::getMessage)
-                .collect(Collectors.joining(" "));
+        userDTO.setEmail("");
+
+        Set<ConstraintViolation<UserDTO>> violations = validator.validate(userDTO);
+        String textFromValidation = getViolations(violations);
+
         assertEquals(2, violations.size());
-        assertEquals("The email is incorrect. The email cannot be empty.", textFromValidation);
+        assertEquals(textFromValidation, "The email is incorrect. The email must not be empty.");
     }
 
     @Test
+    @DisplayName("A test to check the wrong email.")
     void validateUserEmailInvalided() {
-        user.setEmail("email.ru");
 
-        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        userDTO.setEmail("email.ru");
+
+        Set<ConstraintViolation<UserDTO>> violations = validator.validate(userDTO);
+        String textFromValidation = getViolations(violations);
+
         assertEquals(1, violations.size());
-        assertEquals("The email is incorrect.", violations.iterator().next().getMessage());
+        assertEquals(textFromValidation, "The email is incorrect.");
     }
 
     @Test
+    @DisplayName("A test to verify an empty login.")
     void validateUserLoginEmpty() {
-        user.setLogin("");
 
-        Set<ConstraintViolation<User>> violations = validator.validate(user);
-        assertEquals(1, violations.size());
-        assertEquals("The login cannot be empty.", violations.iterator().next().getMessage());
+        userDTO.setLogin("");
+
+        Set<ConstraintViolation<UserDTO>> violations = validator.validate(userDTO);
+        String textFromValidation = getViolations(violations);
+
+        assertEquals(2, violations.size());
+        assertEquals(textFromValidation, "The login must not be empty. The login must not contain spaces.");
     }
 
     @Test
+    @DisplayName("A test to verify the login with spaces.")
     void validateUserLoginSpace() {
-        user.setLogin("do lore");
 
-        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        userDTO.setLogin("do lore");
+
+        Set<ConstraintViolation<UserDTO>> violations = validator.validate(userDTO);
+        String textFromValidation = getViolations(violations);
+
         assertEquals(1, violations.size());
-        assertEquals("The login must not contain spaces.", violations.iterator().next().getMessage());
+        assertEquals(textFromValidation, "The login must not contain spaces.");
     }
 
     @Test
+    @DisplayName("A test to check the wrong date of birth.")
     void validateUserBirthdayInvalided() {
-        user.setBirthday(LocalDate.of(2025, 1, 1));
 
-        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        userDTO.setBirthday(LocalDate.of(2025, 1, 1));
+
+        Set<ConstraintViolation<UserDTO>> violations = validator.validate(userDTO);
+        String textFromValidation = getViolations(violations);
+
         assertEquals(1, violations.size());
-        assertEquals("The date of birth cannot be in the future.", violations.iterator().next().getMessage());
+        assertEquals(textFromValidation, "The date of birth cannot be in the future.");
+    }
+
+    private String getViolations(Set<ConstraintViolation<UserDTO>> violations) {
+        return violations.stream()
+                .map(ConstraintViolation::getMessage)
+                .sorted()
+                .collect(Collectors.joining(" "));
     }
 }
