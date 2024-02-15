@@ -33,35 +33,16 @@ public class FilmDaoDBImpl implements FilmDao {
             "        FROM genres AS g" +
             "        WHERE g.id IN (SELECT fg.genre_id" +
             "                       FROM film_genre AS fg" +
-            "                       WHERE fg.film_id = f.id" +
-            "                       ORDER BY fg.genre_id))                                        AS genre_names," +
+            "                       WHERE fg.film_id = f.id))                                     AS genre_names," +
             "       (SELECT GROUP_CONCAT(l.user_id)" +
             "        FROM likes AS l" +
             "        WHERE (l.film_id = f.id))                                                    AS like_user_ids " +
             "FROM films f" +
             "         LEFT OUTER JOIN mpa AS m ON f.mpa_id = m.id";
-    public static final String FIND_POPULAR_FILMS = FIND_FILMS + " WHERE f.id IN (" +
-            "    SELECT *" +
-            "    FROM (SELECT l.film_id" +
-            "          FROM likes AS l" +
-            "          GROUP BY l.film_id" +
+    public static final String FIND_POPULAR_FILMS = FIND_FILMS + " LEFT OUTER JOIN likes AS l ON l.film_id = f.id " +
+            "          GROUP BY f.id" +
             "          ORDER BY COUNT(l.user_id) DESC" +
-            "          LIMIT ?)" +
-            "    UNION" +
-            "    (SELECT f.id" +
-            "     FROM films AS f" +
-            "     WHERE f.id NOT IN (SELECT l.film_id" +
-            "                        FROM likes AS l" +
-            "                        GROUP BY l.film_id" +
-            "                        ORDER BY COUNT(l.user_id) DESC" +
-            "                        LIMIT ?)" +
-            "     LIMIT ? - (SELECT COUNT(*)" +
-            "                FROM (SELECT l.film_id" +
-            "                      FROM likes AS l" +
-            "                      GROUP BY l.film_id" +
-            "                      ORDER BY COUNT(l.user_id) DESC" +
-            "                      LIMIT ?)))" +
-            "    limit ?)";
+            "          LIMIT ?";
     public static final String FIND_FILM_BY_ID = FIND_FILMS +
             " WHERE f.id = ?";
     public static final String UPDATE_FILM = "UPDATE films " +
@@ -178,7 +159,7 @@ public class FilmDaoDBImpl implements FilmDao {
     @Override
     public List<Film> findPopularFilms(int count) {
 
-        List<Film> films = jdbcTemplate.query(FIND_POPULAR_FILMS, this::mapRowToFilm, count, count, count, count, count);
+        List<Film> films = jdbcTemplate.query(FIND_POPULAR_FILMS, this::mapRowToFilm, count);
 
         return films.stream()
                 .sorted(Comparator.comparingInt(f -> -f.getLikedUserIds().size()))
