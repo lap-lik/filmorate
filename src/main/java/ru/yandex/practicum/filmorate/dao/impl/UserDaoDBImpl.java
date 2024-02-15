@@ -57,7 +57,7 @@ public class UserDaoDBImpl implements UserDao {
             "SELECT ?, ? " +
             "FROM DUAL " +
             "WHERE NOT EXISTS (SELECT 1 " +
-            "                  FROM friendships\n" +
+            "                  FROM friendships" +
             "                  WHERE (user_1 = ? AND user_2 = ?) " +
             "                     OR (user_1 = ? AND user_2 = ?))";
     public static final String DELETE_FRIEND = "DELETE " +
