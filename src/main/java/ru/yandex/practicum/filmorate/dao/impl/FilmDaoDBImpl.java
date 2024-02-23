@@ -27,16 +27,18 @@ public class FilmDaoDBImpl implements FilmDao {
     public static final String SAVE_FILM = "INSERT INTO films (name, description, release_date, duration, mpa_id) " +
             "VALUES (?, ?, ?, ?, ?)";
     public static final String FIND_FILMS = "SELECT f.*," +
-            "       m.name                                                                        AS mpa_name," +
-            "       (SELECT GROUP_CONCAT(genre_id) FROM film_genre AS fg WHERE fg.film_id = f.id) AS genre_ids," +
+            "       m.name                                    AS mpa_name," +
+            "       (SELECT GROUP_CONCAT(genre_id) " +
+            "        FROM film_genre AS fg " +
+            "        WHERE fg.film_id = f.id)                 AS genre_ids," +
             "       (SELECT GROUP_CONCAT(name)" +
             "        FROM genres AS g" +
             "        WHERE g.id IN (SELECT fg.genre_id" +
             "                       FROM film_genre AS fg" +
-            "                       WHERE fg.film_id = f.id))                                     AS genre_names," +
+            "                       WHERE fg.film_id = f.id)) AS genre_names," +
             "       (SELECT GROUP_CONCAT(l.user_id)" +
             "        FROM likes AS l" +
-            "        WHERE (l.film_id = f.id))                                                    AS like_user_ids " +
+            "        WHERE (l.film_id = f.id))                AS like_user_ids " +
             "FROM films f" +
             "         LEFT OUTER JOIN mpa AS m ON f.mpa_id = m.id";
     public static final String FIND_POPULAR_FILMS = FIND_FILMS + " LEFT OUTER JOIN likes AS l ON l.film_id = f.id " +
@@ -51,7 +53,7 @@ public class FilmDaoDBImpl implements FilmDao {
             "    release_date = ?," +
             "    duration     = ?," +
             "    mpa_id       = ? " +
-            "WHERE id = ?;";
+            "WHERE id = ?";
     public static final String DELETE_FILM_BY_ID = "DELETE " +
             "FROM films " +
             "WHERE id = ?";
@@ -159,11 +161,7 @@ public class FilmDaoDBImpl implements FilmDao {
     @Override
     public List<Film> findPopularFilms(int count) {
 
-        List<Film> films = jdbcTemplate.query(FIND_POPULAR_FILMS, this::mapRowToFilm, count);
-
-        return films.stream()
-                .sorted(Comparator.comparingInt(f -> -f.getLikedUserIds().size()))
-                .collect(Collectors.toList());
+        return jdbcTemplate.query(FIND_POPULAR_FILMS, this::mapRowToFilm, count);
     }
 
     @Override
@@ -176,12 +174,12 @@ public class FilmDaoDBImpl implements FilmDao {
 
     private void addLinksFilmGenre(Film film) {
 
-        Long filmId = film.getId();
-        Set<Genre> genres = film.getGenres();
-
-        if (genres == null) {
+        if (film.getGenres() == null) {
             return;
         }
+
+        Long filmId = film.getId();
+        List<Genre> genres = new ArrayList<>(film.getGenres());
 
         deleteLinksFilmGenre(filmId);
         jdbcTemplate.batchUpdate(ADD_LINKS_FILM_GENRE, new BatchPreparedStatementSetter() {
@@ -189,14 +187,13 @@ public class FilmDaoDBImpl implements FilmDao {
             @Override
             public void setValues(PreparedStatement preparedStatement, int i) throws SQLException {
 
-                Genre genre = new ArrayList<>(genres).get(i);
                 preparedStatement.setLong(1, film.getId());
-                preparedStatement.setLong(2, genre.getId());
+                preparedStatement.setLong(2, genres.get(i).getId());
             }
 
             @Override
             public int getBatchSize() {
-                return film.getGenres().size();
+                return genres.size();
             }
         });
     }
@@ -239,6 +236,7 @@ public class FilmDaoDBImpl implements FilmDao {
             String[] splitGenresNames = strGenresNames.split(",");
 
             for (int i = 0; i < splitGenresIds.length; i++) {
+
                 genres.add(Genre.builder()
                         .id(Long.valueOf(splitGenresIds[i]))
                         .name(splitGenresNames[i])
