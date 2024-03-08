@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS likes;
 DROP TABLE IF EXISTS friendships;
 DROP TABLE IF EXISTS film_genre;
+DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS films;
 
@@ -66,3 +67,4 @@ CREATE TABLE IF NOT EXISTS film_genre
     genre_id INTEGER NOT NULL REFERENCES genres (id) ON DELETE CASCADE,
     PRIMARY KEY (film_id, genre_id)
 );
+

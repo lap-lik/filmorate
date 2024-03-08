@@ -2,8 +2,6 @@ package ru.yandex.practicum.filmorate.dto;
 
 import lombok.Builder;
 import lombok.Data;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.validation.Marker;
 import ru.yandex.practicum.filmorate.validation.anatation.AfterDate;
 
@@ -36,9 +34,9 @@ public class FilmDTO {
     private Integer duration;
 
     @NotNull(message = "The MPA rating of the film must not be empty.")
-    private Mpa mpa;
+    private MpaDTO mpa;
 
     private Set<Long> likedUserIds;
 
-    private Set<Genre> genres;
+    private Set<GenreDTO> genres;
 }
