@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.dto.FilmDTO;
+import ru.yandex.practicum.filmorate.dto.MpaDTO;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -21,7 +22,7 @@ class FilmTest {
             .name("Star Wars. Episode I: The Phantom Menace")
             .description("Genre: Action, Adventure, Fantasy, Live Action, Science Fiction")
             .releaseDate(LocalDate.of(1999, 5, 19))
-            .mpa(Mpa.builder().id(1L).build())
+            .mpa(MpaDTO.builder().id(1L).build())
             .duration(136)
             .build();
 
