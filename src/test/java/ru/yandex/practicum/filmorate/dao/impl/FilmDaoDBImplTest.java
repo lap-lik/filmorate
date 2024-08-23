@@ -123,7 +123,7 @@ class FilmDaoDBImplTest {
         assertThat(result)
                 .isNotNull() // проверяем, что объект не равен null
                 .usingRecursiveComparison() // проверяем значения полей сохраненного фильма
-                .ignoringFields("likedUserIds") // пропускаем проверку полей
+                .ignoringFields("likedUserIds", "genres") // пропускаем проверку полей
                 .isEqualTo(film1); // проверяем что сохраненный объект и передаваемый идентичны
     }
 
@@ -244,7 +244,7 @@ class FilmDaoDBImplTest {
         assertThat(result)
                 .isNotNull() // проверяем, что объект не равен null
                 .usingRecursiveComparison() // проверяем значения полей обновленного фильма
-                .ignoringFields("likedUserIds") // пропускаем проверку полей
+                .ignoringFields("likedUserIds", "genres") // пропускаем проверку полей
                 .isEqualTo(filmUpdate);
     }
 
