@@ -29,12 +29,12 @@ public class FilmDaoDBImpl implements FilmDao {
     public static final String FIND_FILMS = "SELECT f.*," +
             "       m.name                                    AS mpa_name," +
             "       (SELECT GROUP_CONCAT(genre_id) " +
-            "        FROM film_genre AS fg " +
+            "        FROM films_genres AS fg " +
             "        WHERE fg.film_id = f.id)                 AS genre_ids," +
             "       (SELECT GROUP_CONCAT(name)" +
             "        FROM genres AS g" +
             "        WHERE g.id IN (SELECT fg.genre_id" +
-            "                       FROM film_genre AS fg" +
+            "                       FROM films_genres AS fg" +
             "                       WHERE fg.film_id = f.id)) AS genre_names," +
             "       (SELECT GROUP_CONCAT(l.user_id)" +
             "        FROM likes AS l" +
@@ -64,10 +64,10 @@ public class FilmDaoDBImpl implements FilmDao {
             "FROM likes " +
             "WHERE film_id = ? " +
             "  AND user_id = ?";
-    public static final String ADD_LINKS_FILM_GENRE = "INSERT INTO film_genre (film_id, genre_id) " +
+    public static final String ADD_LINKS_FILM_GENRE = "INSERT INTO films_genres (film_id, genre_id) " +
             "VALUES (?, ?)";
     public static final String DELETE_LINKS_FILM_GENRE = "DELETE " +
-            "FROM film_genre " +
+            "FROM films_genres " +
             "WHERE film_id = ?";
 
     private final JdbcTemplate jdbcTemplate;
